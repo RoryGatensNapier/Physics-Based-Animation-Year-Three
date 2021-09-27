@@ -25,7 +25,21 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void RungeKutta4th_Velocity(float& velOnAxis, float mass, const float& accelOnAxis, const float& impulseOntoAxis, float dt)
+void RungeKutta4th_Velocity(float& posOnAxis, float mass, const float& accelOnAxis, const float& impulseOntoAxis, float dt)
+{
+	t += dt;
+	float h2 = dt / 2;
+	float h6 = dt / 6;
+	float k1 = posOnAxis + (dt * accelOnAxis);
+	float k2 = (posOnAxis + (dt * (k1 / 2))) + (accelOnAxis * t + dt / 2);
+	float k3 = (posOnAxis + (dt * (k2 / 2))) + (accelOnAxis * t + dt / 2);
+	float k4 = (posOnAxis + (dt * k3)) + (accelOnAxis * t + dt);
+	y = y + 1 / 6 * (dt * (k1 + k2 + k3 + k4));
+
+	posOnAxis = y;
+}
+
+void RungeKutta4th_Accel(float& velOnAxis, float mass, const float& accelOnAxis, const float& impulseOntoAxis, float dt)
 {
 	t += dt;
 	float h2 = dt / 2;
@@ -38,20 +52,6 @@ void RungeKutta4th_Velocity(float& velOnAxis, float mass, const float& accelOnAx
 
 	velOnAxis = y;
 }
-
-/*void RungeKutta4th_Accel(float& posOnAxis, float mass, const float& accelOnAxis, const float& impulseOntoAxis, float dt)
-{
-	t += dt;
-	float h2 = dt / 2;
-	float h6 = dt / 6;
-	float k1 = velOnAxis + (dt * accelOnAxis);
-	float k2 = (velOnAxis + (dt * (k1 / 2))) + (accelOnAxis * t + dt / 2);
-	float k3 = (velOnAxis + (dt * (k2 / 2))) + (accelOnAxis * t + dt / 2);
-	float k4 = (velOnAxis + (dt * k3)) + (accelOnAxis * t + dt);
-	y = y + 1 / 6 * (dt * (k1 + k2 + k3 + k4));
-
-	velOnAxis = y;
-}*/
 
 vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.9f)
 {
