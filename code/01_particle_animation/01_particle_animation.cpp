@@ -57,6 +57,21 @@ GLfloat deltaTime = 0.0f;
 // window
 GLFWwindow* window = NULL;
 
+//My own added resources
+float grav = -9.81f;
+float p4_Time = 0.0f;
+glm::vec3 p4_Displacement = glm::vec3(0.0f, 0.0f, 0.0f);
+float p4_formerSpeed = 0.0f;
+
+float p5_accel = grav;
+float p5_speed = 0.0f;
+float p5_time = 0.0f;
+
+float p6_accel = grav;
+float p6_speed = 0.0f;
+float p6_time = 0.0f;
+
+
 // Moves/alters the camera positions based on user input
 void DoMovement()
 {
@@ -248,22 +263,56 @@ int main(int argc, const char** argv)
 
 
 		// 1 - make particle fall with accelerating speed using the .Translate method
-
+		//particle.Translate(glm::vec3(0.0f, grav, 0.0f));
+		//grav += grav * deltaTime;
 
 		// 2 - same as above using the .SetPosition method
-
+		//particle.SetPosition(glm::vec3(0.0f, particle.Position().y + grav, 0.0f));
 
 		// 3 - make particle oscillate above the ground plane
+		/*if (particle.Position().y < -5 || particle.Position().y > 5)
+		{
+			grav *= -1;
+			particle.Translate(glm::vec3(0.0f, grav, 0.0f));
 
+		}
+		else
+		{
+			particle.Translate(glm::vec3(0.0f, grav, 0.0f));
+		}*/
 
 		// 4 - particle animation from initial velocity and acceleration
-
+		/*p4_Displacement.y = p4_formerSpeed * deltaTime + 0.5 * (grav * (pow(deltaTime, 2)));
+		particle.Translate(p4_Displacement);
+		p4_formerSpeed = p4_Displacement.y / deltaTime;*/
 
 		// 5 - add collision with plane
-
-
+		if (particle.Position().y <= ground.Position().y)
+		{
+			p5_accel *= -0.6f;
+			particle.Translate(glm::vec3(0.0f, p5_accel, 0.0f));
+			p5_accel -= deltaTime;
+		}
+		else
+		{
+			particle.Translate(glm::vec3(0.0f, p5_accel, 0.0f));
+			p5_accel -= deltaTime;
+		}
 		// 6 - Same as above but for a collection of particles
-
+		/*for (Object x : particles)
+		{
+			if (particle.Position().y <= ground.Position().y)
+			{
+				p6_accel *= -0.6f;
+				particle.Translate(glm::vec3(0.0f, p5_accel, 0.0f));
+				p6_accel -= deltaTime;
+			}
+			else
+			{
+				particle.Translate(glm::vec3(0.0f, p5_accel, 0.0f));
+				p6_accel -= deltaTime;
+			}
+		}*/
 
 		/*
 		**	RENDER
