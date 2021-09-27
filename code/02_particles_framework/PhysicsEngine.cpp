@@ -109,7 +109,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	particle.SetColor(vec4(1, 0, 0, 1));
 	particle.SetPosition(vec3(0, 5, 0));
 	particle.SetScale(vec3(0.1f));
-	particle.SetVelocity(vec3(1.f, 0.0f, 2.f));
+	particle.SetVelocity(vec3(0.f, 0.0f, 0.f));
 
 	camera = Camera(vec3(0, 2.5, 10));
 
@@ -121,12 +121,12 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Handle collisions and calculate impulse
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	auto impulse = CollisionImpulse(particle, glm::vec3(0.0f,5.0f,0.0f), 5.0f, 1.0f);
+	auto impulse = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
 	// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement a simple integration scheme
 	vec3 p = particle.Position(), v = particle.Velocity();
-	vec3 acceleration = vec3(0.0f);
+	vec3 acceleration = vec3(0.0f, -9.81f, 0.0f);
 	SymplecticEuler(p,v, particle.Mass(), acceleration, impulse, deltaTime);
 	particle.SetPosition(p);
 	particle.SetVelocity(v);
