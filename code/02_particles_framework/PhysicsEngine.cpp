@@ -8,6 +8,13 @@ const glm::vec3 GRAVITY = glm::vec3(0, -9.81, 0);
 float t = 0;
 float y = 0;
 
+double physTime = 0.0;
+double physDeltaTime = 0.1;
+double currentTime = glfwGetTime();
+double physAcca = 0.0;
+
+vec3 phys_log_Pos = vec3(0);
+vec3 phys_log_Vel = vec3(0);
 
 void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
 {
@@ -131,7 +138,29 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	particle.SetPosition(p);
 	particle.SetVelocity(v);
 
-	
+#if 0
+	double newTime = glfwGetTime();
+	double frameTime = newTime - currentTime;
+	if (frameTime > 0.25)
+	{
+		frameTime = 0.25;
+	}
+	currentTime = newTime;
+	physAcca += frameTime;
+	while (physAcca >= physDeltaTime)
+	{
+		phys_log_Pos = p;
+		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
+		physTime += physDeltaTime;
+		physAcca -= physDeltaTime;
+	}
+	const double alpha = physAcca / physDeltaTime;
+	vec3 newState_Pos = p * (float)alpha + phys_log_Pos * (float)(1.0 - alpha);
+	vec3 newState_Vel = v * (float)alpha + phys_log_Vel * (float)(1.0 - alpha);
+	particle.SetPosition(newState_Pos);
+	particle.SetVelocity(newState_Vel);
+#endif // 0
+
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
