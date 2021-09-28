@@ -22,7 +22,7 @@ void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const ve
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
-	vec3 newvel = vel + (dt * accel);
+	vec3 newvel = vel + (dt * accel);// -(impulse * dt);
 	pos = pos + (vel * dt);
 	vel = newvel;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,10 +32,16 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
-	vel = vel + (accel * dt);
+	vel = vel + (accel * dt) + (impulse);// *dt);
 	pos = pos + (vel * dt);
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
+
+//void VerletIntegration(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
+//{
+//	pos = pos + (dt * vel) + (0.5f * (accel * (dt * dt)));
+//	accel = 
+//}
 
 void RungeKutta4th_Velocity(float& posOnAxis, float mass, const float& accelOnAxis, const float& impulseOntoAxis, float dt)
 {
@@ -70,21 +76,18 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
 	vec3 impulse{ 0.0f };
-	if (abs(pobj.Position().x) > cubeCentre.x + cubeHalfExtent)
+	if (abs(pobj.Position().x) >= cubeCentre.x + cubeHalfExtent - 1)
 	{
-		pobj.SetPosition(vec3(cubeCentre.x + (cubeHalfExtent * (-pobj.Position().x/pobj.Position().x)), pobj.Position().y, pobj.Position().z));
 		impulse = vec3(pobj.Velocity().x * -coefficientOfRestitution, pobj.Velocity().y, pobj.Velocity().z);
 		pobj.SetVelocity(vec3(0, pobj.Velocity().y, pobj.Velocity().z));
 	}
-	if (abs(pobj.Position().y) > cubeCentre.y + cubeHalfExtent)
+	if (abs(pobj.Position().y) >= cubeCentre.y + cubeHalfExtent - 1)
 	{
-		pobj.SetPosition(vec3(pobj.Position().x, cubeCentre.y + (cubeHalfExtent * (-pobj.Position().y / pobj.Position().y)), pobj.Position().z));
 		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y * -coefficientOfRestitution, pobj.Velocity().z);
 		pobj.SetVelocity(vec3(pobj.Velocity().x, 0, pobj.Velocity().z));
 	}
-	if (abs(pobj.Position().z) > cubeCentre.z + cubeHalfExtent)
+	if (abs(pobj.Position().z) >= cubeCentre.z + cubeHalfExtent - 1)
 	{
-		pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, cubeCentre.z + (cubeHalfExtent * (-pobj.Position().z / pobj.Position().z))));
 		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y, pobj.Velocity().z * -coefficientOfRestitution);
 		pobj.SetVelocity(vec3(pobj.Velocity().x, pobj.Velocity().y, 0));
 	}
