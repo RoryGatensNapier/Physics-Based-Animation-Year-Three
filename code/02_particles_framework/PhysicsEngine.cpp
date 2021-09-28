@@ -181,9 +181,9 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
 	}
-	const float alpha = physAcca / physDeltaTime;
-	vec3 newState_Pos = p * alpha + phys_log_Pos * (1.0f - alpha);
-	vec3 newState_Vel = v * alpha + phys_log_Vel * (1.0f - alpha);
+	const double alpha = physAcca / physDeltaTime;
+	vec3 newState_Pos = p * (float)alpha + phys_log_Pos * (float)(1.0 - alpha);
+	vec3 newState_Vel = v * (float)alpha + phys_log_Vel * (float)(1.0 - alpha);
 	particle.SetPosition(newState_Pos);
 	particle.SetVelocity(newState_Vel);
 	phys_log_Pos = particle.Position();
