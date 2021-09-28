@@ -20,6 +20,9 @@ void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const ve
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
+	vec3 newvel = vel + (dt * accel) + impulse;
+	pos = pos + (vel * dt);
+	vel = newvel;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
@@ -125,6 +128,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 // This is called every frame
 void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
+#if 0
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Handle collisions and calculate impulse
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,8 +141,8 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	SymplecticEuler(p,v, particle.Mass(), acceleration, impulse, deltaTime);
 	particle.SetPosition(p);
 	particle.SetVelocity(v);
+#endif
 
-#if 0
 	double newTime = glfwGetTime();
 	double frameTime = newTime - currentTime;
 	if (frameTime > 0.25)
@@ -149,8 +153,18 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	physAcca += frameTime;
 	while (physAcca >= physDeltaTime)
 	{
-		phys_log_Pos = p;
-		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// TODO: Handle collisions and calculate impulse
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		auto impulse = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
+		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// TODO: Implement a simple integration scheme
+		vec3 p = particle.Position(), v = particle.Velocity();
+		vec3 acceleration = vec3(0.0f, -9.81f, 0.0f);
+		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, deltaTime);
+		particle.SetPosition(p);
+		particle.SetVelocity(v);
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
 	}
@@ -159,7 +173,6 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	vec3 newState_Vel = v * (float)alpha + phys_log_Vel * (float)(1.0 - alpha);
 	particle.SetPosition(newState_Pos);
 	particle.SetVelocity(newState_Vel);
-#endif // 0
 
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
