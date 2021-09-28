@@ -15,12 +15,14 @@ double physAcca = 0.0;
 
 vec3 phys_log_Pos = vec3(0);
 vec3 phys_log_Vel = vec3(0);
+vec3 p, v;
+
 
 void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
-	vec3 newvel = vel + (dt * accel) + impulse;
+	vec3 newvel = vel + (dt * accel);
 	pos = pos + (vel * dt);
 	vel = newvel;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,7 +32,7 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
-	vel = vel + (accel * dt) + impulse;
+	vel = vel + (accel * dt);
 	pos = pos + (vel * dt);
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
@@ -70,16 +72,19 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	vec3 impulse{ 0.0f };
 	if (abs(pobj.Position().x) > cubeCentre.x + cubeHalfExtent)
 	{
+		pobj.SetPosition(vec3(cubeCentre.x + (cubeHalfExtent * (-pobj.Position().x/pobj.Position().x)), pobj.Position().y, pobj.Position().z));
 		impulse = vec3(pobj.Velocity().x * -coefficientOfRestitution, pobj.Velocity().y, pobj.Velocity().z);
 		pobj.SetVelocity(vec3(0, pobj.Velocity().y, pobj.Velocity().z));
 	}
 	if (abs(pobj.Position().y) > cubeCentre.y + cubeHalfExtent)
 	{
+		pobj.SetPosition(vec3(pobj.Position().x, cubeCentre.y + (cubeHalfExtent * (-pobj.Position().y / pobj.Position().y)), pobj.Position().z));
 		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y * -coefficientOfRestitution, pobj.Velocity().z);
 		pobj.SetVelocity(vec3(pobj.Velocity().x, 0, pobj.Velocity().z));
 	}
 	if (abs(pobj.Position().z) > cubeCentre.z + cubeHalfExtent)
 	{
+		pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, cubeCentre.z + (cubeHalfExtent * (-pobj.Position().z / pobj.Position().z))));
 		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y, pobj.Velocity().z * -coefficientOfRestitution);
 		pobj.SetVelocity(vec3(pobj.Velocity().x, pobj.Velocity().y, 0));
 	}
@@ -142,7 +147,6 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	particle.SetPosition(p);
 	particle.SetVelocity(v);
 #endif
-
 	double newTime = glfwGetTime();
 	double frameTime = newTime - currentTime;
 	if (frameTime > 0.25)
@@ -160,9 +164,9 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Implement a simple integration scheme
-		vec3 p = particle.Position(), v = particle.Velocity();
+		p = particle.Position(), v = particle.Velocity();
 		vec3 acceleration = vec3(0.0f, -9.81f, 0.0f);
-		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, deltaTime);
+		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
 		particle.SetPosition(p);
 		particle.SetVelocity(v);
 		physTime += physDeltaTime;
@@ -173,6 +177,8 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	vec3 newState_Vel = v * (float)alpha + phys_log_Vel * (float)(1.0 - alpha);
 	particle.SetPosition(newState_Pos);
 	particle.SetVelocity(newState_Vel);
+	phys_log_Pos = particle.Position();
+	phys_log_Vel = particle.Velocity();
 
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
