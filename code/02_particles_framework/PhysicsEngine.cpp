@@ -39,8 +39,7 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 
 //void VerletIntegration(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
 //{
-//	pos = pos + (dt * vel) + (0.5f * (accel * (dt * dt)));
-//	accel = 
+//	pos = 2pos - previousPos + ((dt * dt) * accel);
 //}
 
 void RungeKutta4th_Velocity(float& posOnAxis, float mass, const float& accelOnAxis, const float& impulseOntoAxis, float dt)
@@ -95,13 +94,20 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_y_tip, float cone_r_base, float max_force = 100)
-{
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// TODO: Calculate blow dryer force
-	vec3 force = {0,0,0};
-	return force;
-}
+//double ConicalFormula(double base, double tip, double radius)
+//{
+//	double result = (1 / 3) * abs(tip - base) * glm::pi<float>() * (radius * radius);
+//	return result;
+//}
+
+//vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_y_tip, float cone_r_base, float max_force = 100)
+//{
+//	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//	// TODO: Calculate blow dryer force
+//	vec3 force = {0,5,0};
+//	if (ConicalFormula())
+//	return force;
+//}
 
 // This is called once
 void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
@@ -168,7 +174,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Implement a simple integration scheme
 		p = particle.Position(), v = particle.Velocity();
-		vec3 acceleration = vec3(0.0f, -9.81f, 0.0f);
+		vec3 acceleration = GRAVITY;
 		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
 		particle.SetPosition(p);
 		particle.SetVelocity(v);
