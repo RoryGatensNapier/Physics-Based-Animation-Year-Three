@@ -94,21 +94,35 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-//double ConicalFormula(double base, double tip, double radius)
-//{
-//	double result = (1 / 3) * abs(tip - base) * glm::pi<float>() * (radius * radius);
-//	calculate trajectory (direction/maginitude(velocity)), compare with maximum intersect on vector trajectory with limit of volume of cone from formula.
-//	return result;
-//}
+bool ConicalCalculation(vec3 particlePos, double base, double tip, double radius)
+{
+	//calculate trajectory (direction/maginitude(velocity)), compare with maximum intersect on vector trajectory with limit of volume of cone from formula.
+	double coneHeight = base + tip;
+	double coneRatio = coneHeight * radius;
+	if (particlePos.y >= particlePos.x * coneRatio && particlePos.y >= particlePos.z * coneRatio && particlePos.y < coneHeight)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
-//vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_y_tip, float cone_r_base, float max_force = 100)
-//{
-//	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//	// TODO: Calculate blow dryer force
-//	vec3 force = {0,5,0};
-//	if (ConicalFormula())
-//	return force;
-//}
+vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_y_tip, float cone_r_base, float max_force = 100)
+{
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// TODO: Calculate blow dryer force
+	vec3 force = {0,5,0};
+	if (ConicalCalculation(particlePosition, cone_y_base, cone_y_tip, cone_r_base))
+	{
+		return force;
+	}
+	else
+	{
+		return vec3(0);
+	}
+}
 
 // This is called once
 void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
@@ -171,13 +185,14 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		auto impulse = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
+		impulse += BlowDryerForce(particle.Position(), 0, 4, 3);
 		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Implement a simple integration scheme
 		p = particle.Position(), v = particle.Velocity();
 		vec3 acceleration = GRAVITY;
-		//SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
-		ExplicitEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
+		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
+		//ExplicitEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
 		particle.SetPosition(p);
 		particle.SetVelocity(v);
 		physTime += physDeltaTime;
