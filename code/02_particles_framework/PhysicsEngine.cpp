@@ -99,7 +99,7 @@ bool ConicalCalculation(vec3 particlePos, double base, double tip, double radius
 	//calculate trajectory (direction/maginitude(velocity)), compare with maximum intersect on vector trajectory with limit of volume of cone from formula.
 	double coneHeight = base + tip;
 	double coneRatio = coneHeight * radius;
-	if (particlePos.y >= particlePos.x * coneRatio && particlePos.y >= particlePos.z * coneRatio && particlePos.y < coneHeight)
+	if (particlePos.y >= particlePos.x * coneRatio && particlePos.y >= particlePos.z * coneRatio && particlePos.y < coneHeight && particlePos.y > 0)
 	{
 		return true;
 	}
