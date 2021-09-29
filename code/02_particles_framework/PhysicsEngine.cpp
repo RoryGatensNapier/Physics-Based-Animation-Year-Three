@@ -22,7 +22,7 @@ void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const ve
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
-	vec3 newvel = vel + (dt * accel);// -(impulse * dt);
+	vec3 newvel = vel + (dt * accel) + (impulse);// *dt);
 	pos = pos + (vel * dt);
 	vel = newvel;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,6 +97,7 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 //double ConicalFormula(double base, double tip, double radius)
 //{
 //	double result = (1 / 3) * abs(tip - base) * glm::pi<float>() * (radius * radius);
+//	calculate trajectory (direction/maginitude(velocity)), compare with maximum intersect on vector trajectory with limit of volume of cone from formula.
 //	return result;
 //}
 
@@ -175,7 +176,8 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		// TODO: Implement a simple integration scheme
 		p = particle.Position(), v = particle.Velocity();
 		vec3 acceleration = GRAVITY;
-		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
+		//SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
+		ExplicitEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
 		particle.SetPosition(p);
 		particle.SetVelocity(v);
 		physTime += physDeltaTime;
