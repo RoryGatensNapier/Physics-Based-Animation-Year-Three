@@ -13,12 +13,9 @@ double physDeltaTime = 0.01;
 double currentTime = glfwGetTime();
 double physAcca = 0.0;
 
-vec3 phys_log_Pos = vec3(0);
-vec3 phys_log_Vel = vec3(0);
-vec3 p, v, p_verlet;
-vec3 p_arr[4], v_arr[4];
+vec3 p_verlet;
+vec3 phys_log_Pos[5], phys_log_Vel[5], p_arr[5], v_arr[5] = { vec3(0) };
 
-Particle t2_Particles[4];
 
 void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
 {
@@ -158,6 +155,16 @@ Particle InitParticle(const Mesh* particleMesh, const Shader* particleShader, ve
 	return newParticle;
 }
 
+void Update_TimestepAlphaEval(Particle particle, vec3& loggedPos, vec3& loggedVel, float alpha)
+{
+	vec3 newState_Pos = particle.Position() * (float)alpha + loggedPos * (float)(1.0 - alpha);
+	vec3 newState_Vel = particle.Velocity() * (float)alpha + loggedVel * (float)(1.0 - alpha);
+	particle.SetPosition(newState_Pos);
+	particle.SetVelocity(newState_Vel);
+	loggedPos = particle.Position();
+	loggedVel = particle.Velocity();
+}
+
 // This is called once
 void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 {
@@ -176,23 +183,24 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetShader(defaultShader);
 	ground.SetScale(vec3(10.0f));
 
-	// Initialise particle
-	particle.SetMesh(mesh);
-	particle.SetShader(defaultShader);
-	particle.SetColor(vec4(1, 0, 0, 1));
-	particle.SetPosition(vec3(0, 2, 0));
-	particle.SetScale(vec3(0.1f));
-	particle.SetVelocity(vec3(0.f, 0.0f, 0.f));
-
 	camera = Camera(vec3(0, 2.5, 10));
 
-	for (int x = 0; x < 4; x++)
+	for (int x = 1; x < 5; x++)
 	{
-		t2_Particles[x] = InitParticle(mesh, defaultShader, vec4(x/3, x/2, x/1, 1), vec3(-1.5 + x, 1, 0), vec3(0.1f), vec3(0));
-		p_arr[x] = t2_Particles[x].Position();
-		v_arr[x] = t2_Particles[x].Velocity();
+		particles[x] = InitParticle(mesh, defaultShader, vec4(x/3, x/2, x/1, 1), vec3(-1.5 + x, 1, 0), vec3(0.1f), vec3(0));
+		p_arr[x] = particles[x].Position();
+		v_arr[x] = particles[x].Velocity();
 	}
-	p_verlet = t2_Particles[2].Position();
+
+	// Initialise fan particle
+	particles[0].SetMesh(mesh);
+	particles[0].SetShader(defaultShader);
+	particles[0].SetColor(vec4(1, 0, 0, 1));
+	particles[0].SetPosition(vec3(0, 2, 0));
+	particles[0].SetScale(vec3(0.1f));
+	particles[0].SetVelocity(vec3(0.f, 0.0f, 0.f));
+
+	p_verlet = particles[2].Position();
 }
 
 // This is called every frame
@@ -226,34 +234,35 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vec3 impulse[5];
-		impulse[0] = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
-		impulse[1] = CollisionImpulse(t2_Particles[1], glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
-		impulse[2] = CollisionImpulse(t2_Particles[2], glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);
-		impulse[0] += BlowDryerForce(particle.Position(), 1, 5, 3);
+		for (int x = 0; x < sizeof(particles) / sizeof(particles[0]); x++)
+		{
+			impulse[x] = CollisionImpulse(particles[x], glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
+		}
+		for (int x = 0; x < sizeof(particles) / sizeof(particles[0]); x++)
+		{
+			p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
+		}
+		impulse[0] += BlowDryerForce(particles[0].Position(), 1, 5, 3);
 		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Implement a simple integration scheme
-		p = particle.Position(), v = particle.Velocity();
 		vec3 acceleration = GRAVITY;
-		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse[0], physDeltaTime);
-		ExplicitEuler(p_arr[1] , v_arr[1], t2_Particles[1].Mass(), acceleration, impulse[1], physDeltaTime);
-		VerletIntegration(p_arr[2], p_verlet, v_arr[2], t2_Particles[2].Mass(), acceleration, impulse[2], physDeltaTime);
-		particle.SetPosition(p);
-		particle.SetVelocity(v);
-		t2_Particles[1].SetPosition(p_arr[1]);
-		t2_Particles[1].SetVelocity(v_arr[1]);
-		t2_Particles[2].SetPosition(p_arr[2]);
-		t2_Particles[2].SetVelocity(v_arr[2]);
+		SymplecticEuler(p_arr[0], v_arr[0], particles[0].Mass(), acceleration, impulse[0], physDeltaTime);
+		SymplecticEuler(p_arr[3], v_arr[3], particles[3].Mass(), acceleration, impulse[3], physDeltaTime);
+		ExplicitEuler(p_arr[1] , v_arr[1], particles[1].Mass(), acceleration, impulse[1], physDeltaTime);
+		VerletIntegration(p_arr[2], p_verlet, v_arr[2], particles[2].Mass(), acceleration, impulse[2], physDeltaTime);
+		for (int x = 0; x < sizeof(particles) / sizeof(particles[0]); x++)
+		{
+			particles[x].SetPosition(p_arr[x]);
+			particles[x].SetVelocity(v_arr[x]);
+		}
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
 	}
-	const double alpha = physAcca / physDeltaTime;
-	vec3 newState_Pos = p * (float)alpha + phys_log_Pos * (float)(1.0 - alpha);
-	vec3 newState_Vel = v * (float)alpha + phys_log_Vel * (float)(1.0 - alpha);
-	particle.SetPosition(newState_Pos);
-	particle.SetVelocity(newState_Vel);
-	phys_log_Pos = particle.Position();
-	phys_log_Vel = particle.Velocity();
+	for (int x = 0; x < sizeof(particles)/sizeof(particles[0]); x++)
+	{
+		Update_TimestepAlphaEval(particles[x], p_arr[x], v_arr[x], physDeltaTime);
+	}
 
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -262,8 +271,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 // This is called every frame, after Update
 void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 {
-	particle.Draw(viewMatrix, projMatrix);
-	for (auto particle : t2_Particles)
+	for (auto particle : particles)
 	{
 		particle.Draw(viewMatrix, projMatrix);
 	}
