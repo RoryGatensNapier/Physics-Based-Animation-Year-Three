@@ -15,7 +15,7 @@ double physAcca = 0.0;
 
 vec3 phys_log_Pos = vec3(0);
 vec3 phys_log_Vel = vec3(0);
-vec3 p, v;
+vec3 p, v, p_verlet;
 vec3 p_arr[4], v_arr[4];
 
 Particle t2_Particles[4];
@@ -39,10 +39,12 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-//void VerletIntegration(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
-//{
-//	pos = 2pos - previousPos + ((dt * dt) * accel);
-//}
+void VerletIntegration(vec3& currentPos, vec3& previousPos, vec3& vel, float mass, const vec3& currentAccel, const vec3& impulse, float dt)
+{
+	vec3 temp = currentPos;
+	currentPos = (vec3(2) * currentPos) - previousPos + ((dt * dt) * currentAccel);
+	previousPos = temp;
+}
 
 void RungeKutta4th_Velocity(float& posOnAxis, float mass, const float& accelOnAxis, const float& impulseOntoAxis, float dt)
 {
@@ -190,6 +192,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 		p_arr[x] = t2_Particles[x].Position();
 		v_arr[x] = t2_Particles[x].Velocity();
 	}
+	p_verlet = t2_Particles[2].Position();
 }
 
 // This is called every frame
@@ -225,6 +228,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		vec3 impulse[5];
 		impulse[0] = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
 		impulse[1] = CollisionImpulse(t2_Particles[1], glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
+		impulse[2] = CollisionImpulse(t2_Particles[2], glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);
 		impulse[0] += BlowDryerForce(particle.Position(), 1, 5, 3);
 		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -232,11 +236,14 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		p = particle.Position(), v = particle.Velocity();
 		vec3 acceleration = GRAVITY;
 		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse[0], physDeltaTime);
-		ExplicitEuler(p_arr[1] , v_arr[1], particle.Mass(), acceleration, impulse[1], physDeltaTime);
+		ExplicitEuler(p_arr[1] , v_arr[1], t2_Particles[1].Mass(), acceleration, impulse[1], physDeltaTime);
+		VerletIntegration(p_arr[2], p_verlet, v_arr[2], t2_Particles[2].Mass(), acceleration, impulse[2], physDeltaTime);
 		particle.SetPosition(p);
 		particle.SetVelocity(v);
 		t2_Particles[1].SetPosition(p_arr[1]);
 		t2_Particles[1].SetVelocity(v_arr[1]);
+		t2_Particles[2].SetPosition(p_arr[2]);
+		t2_Particles[2].SetVelocity(v_arr[2]);
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
 	}
