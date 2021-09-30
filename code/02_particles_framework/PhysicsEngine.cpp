@@ -9,7 +9,7 @@ float t = 0;
 float y = 0;
 
 double physTime = 0.0;
-double physDeltaTime = 0.1;
+double physDeltaTime = 0.01;
 double currentTime = glfwGetTime();
 double physAcca = 0.0;
 
@@ -17,6 +17,7 @@ vec3 phys_log_Pos = vec3(0);
 vec3 phys_log_Vel = vec3(0);
 vec3 p, v;
 
+Particle t2_Particles[4];
 
 void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
 {
@@ -114,14 +115,44 @@ vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate blow dryer force
 	vec3 force = {0,5,0};
+	float posArr[3] = { particlePosition.x, particlePosition.y, particlePosition.z };
+	float linearMultiplier[sizeof(posArr)] = { 0 };
+	for (int x = 0; x < sizeof(posArr); x++)
+	{
+		if (posArr[x] <= 0)
+		{
+			linearMultiplier[x] = 1;
+		}
+		else if (posArr[x] < 1 && posArr[x] > 0)
+		{
+			linearMultiplier[x] = 1 * posArr[x];
+		}
+		else if (posArr[x] > 1)
+		{
+			linearMultiplier[x] = 1 / posArr[x];
+		}
+	}
 	if (ConicalCalculation(particlePosition, cone_y_base, cone_y_tip, cone_r_base))
 	{
+		force = vec3(force.x * linearMultiplier[0], force.y * linearMultiplier[1], force.z * linearMultiplier[2]);
 		return force;
 	}
 	else
 	{
 		return vec3(0);
 	}
+}
+
+Particle InitParticle(const Mesh* particleMesh, const Shader* particleShader, vec4 Colour, vec3 Position, vec3 Scale, vec3 initVelocity)
+{
+	Particle newParticle;
+	newParticle.SetMesh(particleMesh);
+	newParticle.SetShader(particleShader);
+	newParticle.SetColor(Colour);
+	newParticle.SetPosition(Position);
+	newParticle.SetScale(Scale);
+	newParticle.SetVelocity(initVelocity);
+	return newParticle;
 }
 
 // This is called once
@@ -146,12 +177,16 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	particle.SetMesh(mesh);
 	particle.SetShader(defaultShader);
 	particle.SetColor(vec4(1, 0, 0, 1));
-	particle.SetPosition(vec3(0, 5, 0));
+	particle.SetPosition(vec3(0, 2, 0));
 	particle.SetScale(vec3(0.1f));
 	particle.SetVelocity(vec3(0.f, 0.0f, 0.f));
 
 	camera = Camera(vec3(0, 2.5, 10));
 
+	for (int x = 0; x < 4; x++)
+	{
+		t2_Particles[x] = InitParticle(mesh, defaultShader, vec4(x/3, x/2, x/1, 1), vec3(-1.5 + x, 1, 0), vec3(0.1f), vec3(0));
+	}
 }
 
 // This is called every frame
@@ -185,7 +220,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		auto impulse = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
-		impulse += BlowDryerForce(particle.Position(), 0, 4, 3);
+		impulse += BlowDryerForce(particle.Position(), 1, 5, 3);
 		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Implement a simple integration scheme
@@ -214,6 +249,10 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 {
 	particle.Draw(viewMatrix, projMatrix);
+	for (auto particle : t2_Particles)
+	{
+		particle.Draw(viewMatrix, projMatrix);
+	}
 	ground.Draw(viewMatrix, projMatrix);
 }
 
