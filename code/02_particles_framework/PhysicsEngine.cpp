@@ -16,6 +16,7 @@ double physAcca = 0.0;
 vec3 phys_log_Pos = vec3(0);
 vec3 phys_log_Vel = vec3(0);
 vec3 p, v;
+vec3 p_arr[4], v_arr[4];
 
 Particle t2_Particles[4];
 
@@ -186,6 +187,8 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	for (int x = 0; x < 4; x++)
 	{
 		t2_Particles[x] = InitParticle(mesh, defaultShader, vec4(x/3, x/2, x/1, 1), vec3(-1.5 + x, 1, 0), vec3(0.1f), vec3(0));
+		p_arr[x] = t2_Particles[x].Position();
+		v_arr[x] = t2_Particles[x].Velocity();
 	}
 }
 
@@ -219,17 +222,21 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		auto impulse = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
-		impulse += BlowDryerForce(particle.Position(), 1, 5, 3);
+		vec3 impulse[5];
+		impulse[0] = CollisionImpulse(particle, glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
+		impulse[1] = CollisionImpulse(t2_Particles[1], glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
+		impulse[0] += BlowDryerForce(particle.Position(), 1, 5, 3);
 		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Implement a simple integration scheme
 		p = particle.Position(), v = particle.Velocity();
 		vec3 acceleration = GRAVITY;
-		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
-		//ExplicitEuler(p, v, particle.Mass(), acceleration, impulse, physDeltaTime);
+		SymplecticEuler(p, v, particle.Mass(), acceleration, impulse[0], physDeltaTime);
+		ExplicitEuler(p_arr[1] , v_arr[1], particle.Mass(), acceleration, impulse[1], physDeltaTime);
 		particle.SetPosition(p);
 		particle.SetVelocity(v);
+		t2_Particles[1].SetPosition(p_arr[1]);
+		t2_Particles[1].SetVelocity(v_arr[1]);
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
 	}
