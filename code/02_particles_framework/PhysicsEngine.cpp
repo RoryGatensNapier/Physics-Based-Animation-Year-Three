@@ -48,18 +48,24 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
 	vec3 impulse{ 0.0f };
-	if (abs(pobj.Position().x) >= cubeCentre.x + cubeHalfExtent - 1)
+	float signs[] = { signbit(pobj.Position().x), signbit(pobj.Position().y), signbit(pobj.Position().z) };
+	for (auto x : signs)
+	{
+		if (x == 0)
+			x = 1;
+	}
+	if (pobj.Position().x >= cubeCentre.x + signs[0] * (cubeHalfExtent - 1))
 	{
 		impulse = vec3(pobj.Velocity().x * -coefficientOfRestitution, pobj.Velocity().y, pobj.Velocity().z);
 		pobj.SetVelocity(vec3(0, pobj.Velocity().y, pobj.Velocity().z));
 	}
-	if (abs(pobj.Position().y) >= cubeCentre.y + cubeHalfExtent - 1)
+	if (pobj.Position().y >= cubeCentre.y + signs[1] * (cubeHalfExtent - 1))
 	{
 		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y * -coefficientOfRestitution, pobj.Velocity().z);
 		pobj.SetVelocity(vec3(pobj.Velocity().x, 0, pobj.Velocity().z));
 	}
-	if (abs(pobj.Position().z) >= cubeCentre.z + cubeHalfExtent - 1)
-	{
+	if (pobj.Position().z >= cubeCentre.z + signs[2] * (cubeHalfExtent - 1))
+	{ 
 		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y, pobj.Velocity().z * -coefficientOfRestitution);
 		pobj.SetVelocity(vec3(pobj.Velocity().x, pobj.Velocity().y, 0));
 	}
@@ -159,7 +165,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	for (int x = 1; x < 5; x++)
 	{
-		particles[x] = InitParticle(mesh, defaultShader, vec4(x/3, x/2, x/1, 1), vec3(-1.5 + x, 1, 0), vec3(0.1f), vec3(0));
+		particles[x] = InitParticle(mesh, defaultShader, vec4(x/3, x/2, x/1, 1), vec3(-1.5 + x, 2, 0), vec3(0.1f), vec3(0));
 		p_arr[x] = particles[x].Position();
 		v_arr[x] = particles[x].Velocity();
 	}
@@ -257,6 +263,18 @@ void PhysicsEngine::HandleInputKey(int keyCode, bool pressed)
 	case GLFW_KEY_1:
 		printf("Key 1 was %s\n", pressed ? "pressed" : "released");
 		break; // don't forget this at the end of every "case" statement!
+	case GLFW_KEY_I:
+		if (pressed)
+			physDeltaTime += 0.005;
+		break;
+	case GLFW_KEY_K:
+		if (pressed)
+			physDeltaTime -= 0.005;
+		break;
+	case GLFW_KEY_0:
+		if (pressed)
+			physDeltaTime = 0.01;
+		break;
 	default:
 		break;
 	}
