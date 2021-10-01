@@ -97,7 +97,15 @@ vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_
 	float linearMultiplier[sizeof(posArr)] = { 0 };
 	for (int x = 0; x < sizeof(posArr); x++)
 	{
-		if (posArr[x] <= 0)
+		if (posArr[x] <= -1)
+		{
+			linearMultiplier[x] = 1 / posArr[x];
+		}
+		if (posArr[x] < 0 && posArr[x] > - 1)
+		{
+			linearMultiplier[x] = 1 * posArr[x];
+		}
+		if (posArr[x] == 0)
 		{
 			linearMultiplier[x] = 1;
 		}
