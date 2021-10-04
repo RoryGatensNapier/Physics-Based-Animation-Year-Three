@@ -21,7 +21,7 @@ void Force::Hooke(Particle& p1, Particle& p2, float restLength, float ks, float 
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Should return the aerodynamic drag force
-	float curLength = p2.Position().length() - p1.Position().length();
+	float curLength = glm::length(vec3(p2.Position() - p1.Position()));
 	auto forceSpring = -ks * (restLength - curLength);
 	auto forceDamp_p1 = -kd * p1.Velocity();
 	auto forceDamp_p2 = -kd * p2.Velocity();
