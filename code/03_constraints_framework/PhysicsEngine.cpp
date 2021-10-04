@@ -38,6 +38,22 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
 	vec3 impulse{ 0.0f };
+	int signage = 0;
+	if (pobj.Position().x >= cubeCentre.x + (cubeHalfExtent) || pobj.Position().x <= cubeCentre.x - (cubeHalfExtent - 1))
+	{
+		impulse += vec3(2 * (pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
+		//pobj.SetPosition(vec3(cubeCentre.x + (signage * cubeHalfExtent) - 1, pobj.Position().y, pobj.Position().z));
+	}
+	if (pobj.Position().y >= cubeCentre.y + (cubeHalfExtent) || pobj.Position().y <= cubeCentre.y - (cubeHalfExtent - 1))
+	{
+		impulse += vec3(pobj.Velocity().x, 2 * (pobj.Velocity().y * -coefficientOfRestitution), pobj.Velocity().z);
+		//pobj.SetPosition(vec3(pobj.Position().x, cubeCentre.y + (signage * cubeHalfExtent) - 1, pobj.Position().z));
+	}
+	if (pobj.Position().z >= cubeCentre.z + (cubeHalfExtent) || pobj.Position().z <= cubeCentre.z - (cubeHalfExtent - 1))
+	{
+		impulse += vec3(pobj.Velocity().x, pobj.Velocity().y, 2 * (pobj.Velocity().z * -coefficientOfRestitution));
+		//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, cubeCentre.z + (signage * cubeHalfExtent) - 1));
+	}
 	return impulse;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
@@ -83,7 +99,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 10));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(-4 + x, 0, 0), vec3(0.1), vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(-4 + x, 3, 0), vec3(0.1), vec3(0));
 		p_arr[x] = particles[x].Position();
 		v_arr[x] = particles[x].Velocity();
 	}
@@ -116,11 +132,11 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vec3 impulse[prt_len];
-		vec3 acceleration = vec3(0);// GRAVITY;
+		vec3 acceleration = GRAVITY;
 		for (int x = 0; x < prt_len; x++)
 		{
 			particles[x].ClearForcesImpulses();
-			impulse[x] = CollisionImpulse(particles[x], glm::vec3(0.0f, 5.0f, 0.0f), 5.0f);// , 1.0f);
+			impulse[x] = CollisionImpulse(particles[x], glm::vec3(0.0f, 7.0f, 0.0f), 7.0f);// , 1.0f);
 			p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
 			SymplecticEuler(p_arr[x], v_arr[x], particles[x].Mass(), acceleration, impulse[x], physDeltaTime);
 			particles[x].SetPosition(p_arr[x]);
