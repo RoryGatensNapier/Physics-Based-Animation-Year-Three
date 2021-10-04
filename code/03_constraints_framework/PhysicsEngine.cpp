@@ -18,6 +18,8 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
+	vel = vel + (accel * dt) + (impulse);
+	pos = pos + (vel * dt);
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
