@@ -9,13 +9,14 @@ float t = 0;
 float y = 0;
 
 double physTime = 0.0;
-double physDeltaTime = 0.01;
+double physDeltaTime = 0.1;
 double currentTime = glfwGetTime();
 double physAcca = 0.0;
 
 vec3 p_verlet;
 vec3 phys_log_Pos[5], phys_log_Vel[5], p_arr[5], v_arr[5] = { vec3(0) };
 
+bool shouldFan = true;
 
 void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
 {
@@ -52,7 +53,10 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	for (auto x : signs)
 	{
 		if (x == 0)
+		{
 			x = 1;
+			continue;
+		}
 	}
 	if (pobj.Position().x >= cubeCentre.x + signs[0] * (cubeHalfExtent - 1))
 	{
@@ -228,7 +232,8 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		{
 			p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
 		}
-		impulse[0] += BlowDryerForce(particles[0].Position(), 1, 5, 3);
+		if (shouldFan)
+			impulse[0] += BlowDryerForce(particles[0].Position(), 1, 5, 3);
 		// Calculate acceleration by accumulating all forces (here we just have gravity) and dividing by the mass
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Implement a simple integration scheme
@@ -283,6 +288,9 @@ void PhysicsEngine::HandleInputKey(int keyCode, bool pressed)
 		if (pressed)
 			physDeltaTime = 0.01;
 		break;
+	case GLFW_KEY_F:
+		if (pressed)
+			shouldFan = !shouldFan;
 	default:
 		break;
 	}
