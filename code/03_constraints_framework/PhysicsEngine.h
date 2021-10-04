@@ -24,6 +24,6 @@ public:
 
 private:
 
-	PhysicsBody ground;
 
+	PhysicsBody ground;
 };
