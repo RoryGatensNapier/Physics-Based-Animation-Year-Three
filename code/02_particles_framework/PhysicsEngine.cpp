@@ -9,7 +9,7 @@ float t = 0;
 float y = 0;
 
 double physTime = 0.0;
-double physDeltaTime = 0.1;
+double physDeltaTime = 0.01;
 double currentTime = glfwGetTime();
 double physAcca = 0.0;
 
@@ -47,31 +47,23 @@ void VerletIntegration(vec3& currentPos, vec3& previousPos, vec3& vel, float mas
 vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.9f)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// TODO: Calculate collision impulse
+		// TODO: Calculate collision impulse
 	vec3 impulse{ 0.0f };
-	float signs[] = { signbit(pobj.Position().x), signbit(pobj.Position().y), signbit(pobj.Position().z) };
-	for (auto x : signs)
+	int signage = 0;
+	if (pobj.Position().x >= cubeCentre.x + (cubeHalfExtent) || pobj.Position().x <= cubeCentre.x - (cubeHalfExtent - 1))
 	{
-		if (x == 0)
-		{
-			x = 1;
-			continue;
-		}
+		impulse += vec3(2 * (pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
+		//pobj.SetPosition(vec3(cubeCentre.x + (signage * cubeHalfExtent) - 1, pobj.Position().y, pobj.Position().z));
 	}
-	if (pobj.Position().x >= cubeCentre.x + signs[0] * (cubeHalfExtent - 1))
+	if (pobj.Position().y >= cubeCentre.y + (cubeHalfExtent) || pobj.Position().y <= cubeCentre.y - (cubeHalfExtent - 1))
 	{
-		impulse = vec3(pobj.Velocity().x * -coefficientOfRestitution, pobj.Velocity().y, pobj.Velocity().z);
-		pobj.SetVelocity(vec3(0, pobj.Velocity().y, pobj.Velocity().z));
+		impulse += vec3(pobj.Velocity().x, 2 * (pobj.Velocity().y * -coefficientOfRestitution), pobj.Velocity().z);
+		//pobj.SetPosition(vec3(pobj.Position().x, cubeCentre.y + (signage * cubeHalfExtent) - 1, pobj.Position().z));
 	}
-	if (pobj.Position().y >= cubeCentre.y + signs[1] * (cubeHalfExtent - 1))
+	if (pobj.Position().z >= cubeCentre.z + (cubeHalfExtent) || pobj.Position().z <= cubeCentre.z - (cubeHalfExtent - 1))
 	{
-		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y * -coefficientOfRestitution, pobj.Velocity().z);
-		pobj.SetVelocity(vec3(pobj.Velocity().x, 0, pobj.Velocity().z));
-	}
-	if (pobj.Position().z >= cubeCentre.z + signs[2] * (cubeHalfExtent - 1))
-	{ 
-		impulse = vec3(pobj.Velocity().x, pobj.Velocity().y, pobj.Velocity().z * -coefficientOfRestitution);
-		pobj.SetVelocity(vec3(pobj.Velocity().x, pobj.Velocity().y, 0));
+		impulse += vec3(pobj.Velocity().x, pobj.Velocity().y, 2 * (pobj.Velocity().z * -coefficientOfRestitution));
+		//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, cubeCentre.z + (signage * cubeHalfExtent) - 1));
 	}
 	return impulse;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
