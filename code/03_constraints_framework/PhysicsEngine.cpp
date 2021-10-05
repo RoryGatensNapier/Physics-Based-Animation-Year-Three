@@ -33,15 +33,6 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void SymplecticEuler(Particle& particle, float mass, const vec3& accel, const vec3& impulse, float dt)
-{
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// TODO: Implement
-	particle.SetVelocity(particle.Velocity() + (accel * dt) + (impulse)+(particle.AccumulatedForce() * dt));// +(particle.AccumulatedImpulse()));
-	particle.SetPosition(particle.Position() + (particle.Velocity() * dt));
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-}
-
 vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.9f)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,26 +131,25 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vec3 impulse[prt_len];
 		vec3 acceleration = GRAVITY;
 		for (int x = 0; x < prt_len; x++)
 		{
 			particles[x].ClearForcesImpulses();
-			impulse[x] = CollisionImpulse(particles[x], glm::vec3(0.0f, 7.0f, 0.0f), 7.0f);// , 1.0f);
+			particles[x].ApplyImpulse(CollisionImpulse(particles[x], glm::vec3(0.0f, 7.0f, 0.0f), 7.0f));// , 1.0f);
 			//p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
-			//SymplecticEuler(p_arr[x], v_arr[x], particles[x].Mass(), acceleration, impulse[x], physDeltaTime);
 			if (x + 1 > prt_len)
 			{
 				continue;
 			}
 			else
 			{
-				Force::Hooke(particles[x], particles[x + 1], 1, 5, 0.2);
+				Force::Hooke(particles[x], particles[x + 1], 1, 0.5, 0.2);
 				//Force::Hooke(particles[x + 1], particles[x], 1, 5, 0.2);
 			}
-			SymplecticEuler(particles[x], particles[x].Mass(), acceleration, impulse[x], physDeltaTime);
-			/*particles[x].SetPosition(p_arr[x]);
-			particles[x].SetVelocity(v_arr[x]);*/
+			SymplecticEuler(p_arr[x], v_arr[x], particles[x].Mass(), particles[x].AccumulatedForce() + acceleration, particles[x].AccumulatedImpulse(), physDeltaTime);
+			//SymplecticEuler(particles[x], particles[x].Mass(), acceleration, impulse[x], physDeltaTime);
+			particles[x].SetPosition(p_arr[x]);
+			particles[x].SetVelocity(v_arr[x]);
 		}
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
