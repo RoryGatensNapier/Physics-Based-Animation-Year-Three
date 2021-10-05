@@ -33,16 +33,42 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
+void SymplecticEuler(Particle& p, float mass, const vec3& accel, const vec3& impulse, float dt)
+{
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// TODO: Implement
+	p.SetVelocity(p.Velocity() + (accel * dt) + (impulse));
+	p.SetPosition(p.Position() + (p.Velocity() * dt));
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+}
+
 vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.9f)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
 	vec3 impulse{ 0.0f };
 	int signage = 0;
+	float P_axisVals[3] = { pobj.Position().x, pobj.Position().y, pobj.Position().z };
+	float cube_axisVals[3] = { cubeCentre.x, cubeCentre.y, cubeCentre.z };
+	for (auto x = 0; x < sizeof(P_axisVals)/sizeof(P_axisVals[0]); x++)
+	{
+		if (P_axisVals[x] >= 0)
+		{
+			signage = 1;
+		}
+		else
+		{
+			signage = -1;
+		}
+		if (P_axisVals[x] >= cube_axisVals[x] + (cubeHalfExtent) || P_axisVals[x] <= -(cubeHalfExtent))
+		{
+			//todo
+		}
+	}
 	if (pobj.Position().x >= cubeCentre.x + (cubeHalfExtent) || pobj.Position().x <= cubeCentre.x - (cubeHalfExtent - 1))
 	{
 		impulse += vec3(2 * (pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
-		//pobj.SetPosition(vec3(cubeCentre.x + (signage * cubeHalfExtent) - 1, pobj.Position().y, pobj.Position().z));
+		pobj.SetPosition(vec3(cubeCentre.x + (signage * cubeHalfExtent) - 1, pobj.Position().y, pobj.Position().z));
 	}
 	if (pobj.Position().y >= cubeCentre.y + (cubeHalfExtent) || pobj.Position().y <= cubeCentre.y - (cubeHalfExtent - 1))
 	{
@@ -120,6 +146,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
 	double newTime = glfwGetTime();
 	double frameTime = newTime - currentTime;
+	float alpha = 0;
 	if (frameTime > 0.25)
 	{
 		frameTime = 0.25;
@@ -135,28 +162,28 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		for (int x = 0; x < prt_len; x++)
 		{
 			particles[x].ClearForcesImpulses();
-			particles[x].ApplyImpulse(CollisionImpulse(particles[x], glm::vec3(0.0f, 7.0f, 0.0f), 7.0f));// , 1.0f);
+			if (!particles[x].IsFixed())
+			{
+				Force::Gravity(particles[x]);
+			}
 			//p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
 			if (x + 1 > prt_len)
 			{
 				continue;
 			}
-			else
+			else if (!particles[x].IsFixed())
 			{
 				Force::Hooke(particles[x], particles[x + 1], 1, 0.5, 0.2);
-				//Force::Hooke(particles[x + 1], particles[x], 1, 5, 0.2);
 			}
-			SymplecticEuler(p_arr[x], v_arr[x], particles[x].Mass(), particles[x].AccumulatedForce() + acceleration, particles[x].AccumulatedImpulse(), physDeltaTime);
-			//SymplecticEuler(particles[x], particles[x].Mass(), acceleration, impulse[x], physDeltaTime);
-			particles[x].SetPosition(p_arr[x]);
-			particles[x].SetVelocity(v_arr[x]);
+			SymplecticEuler(particles[x], particles[x].Mass(), particles[x].AccumulatedForce(), particles[x].AccumulatedImpulse(), physDeltaTime);
 		}
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
-	}
-	for (int x = 0; x < prt_len; x++)
-	{
-		Update_TimestepAlphaEval(particles[x], p_arr[x], v_arr[x], physDeltaTime);
+		alpha = physAcca / physDeltaTime;
+		for (int x = 0; x < prt_len; x++)
+		{
+			Update_TimestepAlphaEval(particles[x], p_arr[x], v_arr[x], alpha);
+		}
 	}
 }
 
