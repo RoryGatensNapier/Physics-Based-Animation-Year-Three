@@ -12,7 +12,7 @@ double physDeltaTime = 0.01;
 double currentTime = glfwGetTime();
 double physAcca = 0.0;
 
-Particle particles[9];
+Particle particles[2];
 const int prt_len = sizeof(particles) / sizeof(particles[0]);
 
 vec3 phys_log_Pos[prt_len], phys_log_Vel[prt_len], p_arr[prt_len], v_arr[prt_len] = { vec3(0) };
@@ -130,7 +130,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 10));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(-4 + x, 3, 0), vec3(1), vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(x, 3, 0), vec3(1), vec3(0));
 		p_arr[x] = particles[x].Position();
 		v_arr[x] = particles[x].Velocity();
 	}
@@ -180,7 +180,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 			}
 			else //if (!particles[x].IsFixed())
 			{
-				Force::Hooke(particles[x], particles[x + 1], 0.1f, 1.f, 0.9f);	
+				Force::Hooke(particles[x], particles[x + 1], 0.1f, 1.f, 2.f);	
 			}
 			if (particles[x].IsFixed())
 			{
