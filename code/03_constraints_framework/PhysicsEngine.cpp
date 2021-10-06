@@ -96,14 +96,19 @@ Particle InitParticle(const Mesh* particleMesh, const Shader* particleShader, ve
 	return newParticle;
 }
 
-void Update_TimestepAlphaEval(Particle particle, vec3& loggedPos, vec3& loggedVel, float alpha)
+void Update_TimestepAlphaEval(Particle particle, int iter, vec3 loggedPos[], vec3 loggedVel[], float alpha)
 {
-	vec3 newState_Pos = particle.Position() * (float)alpha + loggedPos * (float)(1.0 - alpha);
-	vec3 newState_Vel = particle.Velocity() * (float)alpha + loggedVel * (float)(1.0 - alpha);
+	if (particle.IsFixed())
+	{
+		particle.SetPosition(p_arr[iter]);
+		particle.SetVelocity(v_arr[iter]);
+	}
+	vec3 newState_Pos = particle.Position() * alpha + loggedPos[iter] * (1.0f - alpha);
+	vec3 newState_Vel = particle.Velocity() * alpha + loggedVel[iter] * (1.0f - alpha);
 	particle.SetPosition(newState_Pos);
 	particle.SetVelocity(newState_Vel);
-	loggedPos = particle.Position();
-	loggedVel = particle.Velocity();
+	loggedPos[iter] = particle.Position();
+	loggedVel[iter] = particle.Velocity();
 }
 
 // This is called once
@@ -125,10 +130,11 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 10));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(-4 + x, 3, 0), vec3(0.1), vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(-4 + x, 3, 0), vec3(1), vec3(0));
 		p_arr[x] = particles[x].Position();
 		v_arr[x] = particles[x].Velocity();
 	}
+	particles[0].SetFixed();
 }
 
 void PhysicsEngine::Task1Init()
@@ -162,6 +168,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		for (int x = 0; x < prt_len; x++)
 		{
 			particles[x].ClearForcesImpulses();
+			p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
 			if (!particles[x].IsFixed())
 			{
 				Force::Gravity(particles[x]);
@@ -171,18 +178,25 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 			{
 				continue;
 			}
-			else if (!particles[x].IsFixed())
+			else //if (!particles[x].IsFixed())
 			{
-				Force::Hooke(particles[x], particles[x + 1], 1, 0.5, 0.2);
+				Force::Hooke(particles[x], particles[x + 1], 0.1f, 1.f, 0.9f);	
 			}
-			SymplecticEuler(particles[x], particles[x].Mass(), particles[x].AccumulatedForce(), particles[x].AccumulatedImpulse(), physDeltaTime);
+			if (particles[x].IsFixed())
+			{
+				SymplecticEuler(particles[x], particles[x].Mass(), vec3(0), vec3(0), physDeltaTime);
+			}
+			else
+			{
+				SymplecticEuler(particles[x], particles[x].Mass(), particles[x].AccumulatedForce(), particles[x].AccumulatedImpulse(), physDeltaTime);
+			}
 		}
 		physTime += physDeltaTime;
 		physAcca -= physDeltaTime;
 		alpha = physAcca / physDeltaTime;
 		for (int x = 0; x < prt_len; x++)
 		{
-			Update_TimestepAlphaEval(particles[x], p_arr[x], v_arr[x], alpha);
+			Update_TimestepAlphaEval(particles[x], x, p_arr, v_arr, alpha);
 		}
 	}
 }
