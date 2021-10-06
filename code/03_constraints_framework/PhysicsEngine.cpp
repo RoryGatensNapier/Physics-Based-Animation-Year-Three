@@ -12,7 +12,7 @@ double physDeltaTime = 0.01;
 double currentTime = glfwGetTime();
 double physAcca = 0.0;
 
-Particle particles[2];
+Particle particles[5];
 const int prt_len = sizeof(particles) / sizeof(particles[0]);
 
 vec3 phys_log_Pos[prt_len], phys_log_Vel[prt_len], p_arr[prt_len], v_arr[prt_len] = { vec3(0) };
@@ -84,7 +84,7 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-Particle InitParticle(const Mesh* particleMesh, const Shader* particleShader, vec4 Colour, vec3 Position, vec3 Scale, vec3 initVelocity)
+Particle InitParticle(const Mesh* particleMesh, const Shader* particleShader, vec4 Colour, vec3 Position, vec3 Scale, float mass, vec3 initVelocity)
 {
 	Particle newParticle;
 	newParticle.SetMesh(particleMesh);
@@ -92,6 +92,7 @@ Particle InitParticle(const Mesh* particleMesh, const Shader* particleShader, ve
 	newParticle.SetColor(Colour);
 	newParticle.SetPosition(Position);
 	newParticle.SetScale(Scale);
+	newParticle.SetMass(mass);
 	newParticle.SetVelocity(initVelocity);
 	return newParticle;
 }
@@ -130,7 +131,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 10));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(x, 3, 0), vec3(1), vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(0, x, 0), vec3(1), x, vec3(0));
 		p_arr[x] = particles[x].Position();
 		v_arr[x] = particles[x].Velocity();
 	}
@@ -180,8 +181,19 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 			}
 			else //if (!particles[x].IsFixed())
 			{
-				Force::Hooke(particles[x], particles[x + 1], 0.1f, 1.f, 2.f);	
+				Force::Hooke(particles[x], particles[x + 1], 1.f, 5.f, 1.f);	
 			}
+			/*if (particles[x].IsFixed())
+			{
+				SymplecticEuler(particles[x], particles[x].Mass(), vec3(0), vec3(0), physDeltaTime);
+			}
+			else
+			{
+				SymplecticEuler(particles[x], particles[x].Mass(), particles[x].AccumulatedForce(), particles[x].AccumulatedImpulse(), physDeltaTime);
+			}*/
+		}
+		for (int x = 0; x < prt_len; x++)
+		{
 			if (particles[x].IsFixed())
 			{
 				SymplecticEuler(particles[x], particles[x].Mass(), vec3(0), vec3(0), physDeltaTime);
