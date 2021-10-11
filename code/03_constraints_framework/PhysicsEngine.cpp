@@ -7,15 +7,13 @@ using namespace glm;
 
 const glm::vec3 GRAVITY = glm::vec3(0, -9.81, 0);
 
-double physTime = 0.0;
-double physDeltaTime = 0.01;
-double currentTime = glfwGetTime();
+double totalTime = 0.0;
 double physAcca = 0.0;
 
 Particle particles[5];
 const int prt_len = sizeof(particles) / sizeof(particles[0]);
 
-vec3 phys_log_Pos[prt_len], phys_log_Vel[prt_len], p_arr[prt_len], v_arr[prt_len] = { vec3(0) };
+//vec3 phys_log_Pos[prt_len], phys_log_Vel[prt_len], p_arr[prt_len], v_arr[prt_len] = { vec3(0) };
 
 void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
 {
@@ -33,10 +31,11 @@ void SymplecticEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void SymplecticEuler(Particle& p, float mass, const vec3& accel, const vec3& impulse, float dt)
+void SymplecticEuler(Particle& p, float mass, const vec3& force, const vec3& impulse, float dt)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
+	vec3 accel = force / mass;
 	p.SetVelocity(p.Velocity() + (accel * dt) + (impulse));
 	p.SetPosition(p.Position() + (p.Velocity() * dt));
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -101,8 +100,8 @@ void Update_TimestepAlphaEval(Particle particle, int iter, vec3 loggedPos[], vec
 {
 	if (particle.IsFixed())
 	{
-		particle.SetPosition(p_arr[iter]);
-		particle.SetVelocity(v_arr[iter]);
+		//particle.SetPosition(p_arr[iter]);
+		//particle.SetVelocity(v_arr[iter]);
 	}
 	vec3 newState_Pos = particle.Position() * alpha + loggedPos[iter] * (1.0f - alpha);
 	vec3 newState_Vel = particle.Velocity() * alpha + loggedVel[iter] * (1.0f - alpha);
@@ -131,9 +130,9 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 10));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0,0,0,1), vec3(0, x, 0), vec3(1), x, vec3(0));
-		p_arr[x] = particles[x].Position();
-		v_arr[x] = particles[x].Velocity();
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0.2 * x,0,0,1), vec3(0, 5-x, 0), vec3(0.1), 1, vec3(0));
+		//p_arr[x] = particles[x].Position();
+		//v_arr[x] = particles[x].Velocity();
 	}
 	particles[0].SetFixed();
 }
@@ -144,73 +143,64 @@ void PhysicsEngine::Task1Init()
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {
-	// Calculate forces, then acceleration, then integrate
+	printf("new frame \n");
+
+	vec3 acceleration = GRAVITY;
+	for (int x = 0; x < prt_len; x++)
+	{
+		particles[x].ClearForcesImpulses();
+		//p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
+		if (!particles[x].IsFixed())
+		{
+			Force::Gravity(particles[x]);
+		}
+		if (x > prt_len)
+		{
+			continue;
+		}
+		else
+		{
+			Force::Hooke(particles[x], particles[x + 1], 1.f, 10.f, 0.5f);
+		}
+	}
+	for (int x = 0; x < prt_len; x++)
+	{
+		if (particles[x].IsFixed())
+		{
+			SymplecticEuler(particles[x], particles[x].Mass(), vec3(0), vec3(0), deltaTime);
+		}
+		else
+		{
+			SymplecticEuler(particles[x], particles[x].Mass(), particles[x].AccumulatedForce(), particles[x].AccumulatedImpulse(), deltaTime);
+		}
+	}
 }
 
 
 // This is called every frame
 void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
-	double newTime = glfwGetTime();
-	double frameTime = newTime - currentTime;
+	double timeStep = 0.001;
 	float alpha = 0;
-	if (frameTime > 0.25)
+	if (deltaTime > 0.25)
 	{
-		frameTime = 0.25;
+		deltaTime = 0.25;
 	}
-	currentTime = newTime;
-	physAcca += frameTime;
-	while (physAcca >= physDeltaTime)
+	physAcca += deltaTime;
+	while (physAcca >= timeStep)
 	{
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vec3 acceleration = GRAVITY;
-		for (int x = 0; x < prt_len; x++)
-		{
-			particles[x].ClearForcesImpulses();
-			p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
-			if (!particles[x].IsFixed())
-			{
-				Force::Gravity(particles[x]);
-			}
-			//p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
-			if (x + 1 > prt_len)
-			{
-				continue;
-			}
-			else //if (!particles[x].IsFixed())
-			{
-				Force::Hooke(particles[x], particles[x + 1], 1.f, 5.f, 1.f);	
-			}
-			/*if (particles[x].IsFixed())
-			{
-				SymplecticEuler(particles[x], particles[x].Mass(), vec3(0), vec3(0), physDeltaTime);
-			}
-			else
-			{
-				SymplecticEuler(particles[x], particles[x].Mass(), particles[x].AccumulatedForce(), particles[x].AccumulatedImpulse(), physDeltaTime);
-			}*/
-		}
-		for (int x = 0; x < prt_len; x++)
-		{
-			if (particles[x].IsFixed())
-			{
-				SymplecticEuler(particles[x], particles[x].Mass(), vec3(0), vec3(0), physDeltaTime);
-			}
-			else
-			{
-				SymplecticEuler(particles[x], particles[x].Mass(), particles[x].AccumulatedForce(), particles[x].AccumulatedImpulse(), physDeltaTime);
-			}
-		}
-		physTime += physDeltaTime;
-		physAcca -= physDeltaTime;
-		alpha = physAcca / physDeltaTime;
-		for (int x = 0; x < prt_len; x++)
-		{
-			Update_TimestepAlphaEval(particles[x], x, p_arr, v_arr, alpha);
-		}
+		Task1Update(deltaTime, totalTime);
+		totalTime += timeStep;
+		physAcca -= timeStep;
 	}
+	alpha = physAcca / timeStep;
+	/*for (int x = 0; x < prt_len; x++)
+	{
+		Update_TimestepAlphaEval(particles[x], x, p_arr, v_arr, alpha);
+	}*/
 }
 
 // This is called every frame, after Update
