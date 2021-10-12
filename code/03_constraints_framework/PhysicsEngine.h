@@ -26,6 +26,6 @@ private:
 
 
 	PhysicsBody ground;
-	Particle particles[2] = {};
+	Particle particles[5] = {};
 	int prt_len = sizeof(particles)/sizeof(particles[0]);
 };

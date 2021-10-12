@@ -47,35 +47,42 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	int signage = 0;
 	float P_axisVals[3] = { pobj.Position().x, pobj.Position().y, pobj.Position().z };
 	float cube_axisVals[3] = { cubeCentre.x, cubeCentre.y, cubeCentre.z };
-	for (auto x = 0; x < sizeof(P_axisVals)/sizeof(P_axisVals[0]); x++)
-	{
-		if (P_axisVals[x] >= 0)
-		{
-			signage = 1;
-		}
-		else
-		{
-			signage = -1;
-		}
-		if (P_axisVals[x] >= cube_axisVals[x] + (cubeHalfExtent) || P_axisVals[x] <= -(cubeHalfExtent))
-		{
-			//todo
-		}
-	}
+	float nudge = 0;
 	if (pobj.Position().x >= cubeCentre.x + (cubeHalfExtent) || pobj.Position().x <= cubeCentre.x - (cubeHalfExtent - 1))
 	{
 		impulse += vec3(2 * (pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
-		pobj.SetPosition(vec3(cubeCentre.x + (signage * cubeHalfExtent) - 1, pobj.Position().y, pobj.Position().z));
+		if (pobj.Velocity().x > 0)
+		{
+			pobj.SetPosition(vec3(pobj.Position().x - 0.1f, pobj.Position().y, pobj.Position().z));
+		}
+		else
+		{
+			pobj.SetPosition(vec3(pobj.Position().x + 0.1f, pobj.Position().y, pobj.Position().z));
+		}
 	}
 	if (pobj.Position().y >= cubeCentre.y + (cubeHalfExtent) || pobj.Position().y <= cubeCentre.y - (cubeHalfExtent - 1))
 	{
 		impulse += vec3(pobj.Velocity().x, 2 * (pobj.Velocity().y * -coefficientOfRestitution), pobj.Velocity().z);
-		//pobj.SetPosition(vec3(pobj.Position().x, cubeCentre.y + (signage * cubeHalfExtent) - 1, pobj.Position().z));
+		if (pobj.Velocity().y > 0)
+		{
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y - 0.1f, pobj.Position().z));
+		}
+		else
+		{
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y + 0.1f, pobj.Position().z));
+		}
 	}
 	if (pobj.Position().z >= cubeCentre.z + (cubeHalfExtent) || pobj.Position().z <= cubeCentre.z - (cubeHalfExtent - 1))
 	{
 		impulse += vec3(pobj.Velocity().x, pobj.Velocity().y, 2 * (pobj.Velocity().z * -coefficientOfRestitution));
-		//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, cubeCentre.z + (signage * cubeHalfExtent) - 1));
+		if (pobj.Velocity().z > 0)
+		{
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z - 0.1f));
+		}
+		else
+		{
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z + 0.1f));
+		}
 	}
 	return impulse;
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,7 +137,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 20));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0.2 * x,0,0,1), vec3(x, 5, 0), vec3(0.1), 1, vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0.2 * x,0,0,1), vec3(x*2, 10, 0), vec3(0.1), 1, vec3(0));
 	}
 	particles[0].SetFixed();
 	//particles[4].SetFixed();
@@ -145,21 +152,28 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	//printf("new frame \n");
 
 	vec3 acceleration = GRAVITY;
-	for (int x = 0; x < prt_len; x++)
+	for (int x = prt_len - 1; x > -1; x--)
 	{
 		particles[x].ClearForcesImpulses();
+	}
+	for (int x = prt_len-1; x > -1; x--)
+	{
 		if (!particles[x].IsFixed())
 		{
 			Force::Gravity(particles[x]);
 		}
-		if (x + 1 > prt_len)
+		if (x - 1 < 0)
 		{
 			continue;
 		}
 		else
 		{
-			Force::Hooke(particles[x], particles[x + 1], 1.f, 10.f, 0.9f);
+			Force::Hooke(particles[x], particles[x - 1], 0.1f, 10.f, 0.9f);
 		}
+	}
+	for (int x = 0; x < prt_len; x++)
+	{
+		//particles[x].ApplyImpulse(CollisionImpulse(particles[x], vec3(0, 10, 0), 10));
 	}
 	for (int x = 0; x < prt_len; x++)
 	{
@@ -178,7 +192,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 // This is called every frame
 void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
-	double timeStep = 0.002;
+	double timeStep = 0.004;
 	float alpha = 0;
 	double physAcca = 0.0;
 
