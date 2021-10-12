@@ -8,8 +8,6 @@ using namespace glm;
 
 const glm::vec3 GRAVITY = glm::vec3(0, -9.81, 0);
 
-double physAcca = 0.0;
-
 //vec3 phys_log_Pos[prt_len], phys_log_Vel[prt_len], p_arr[prt_len], v_arr[prt_len] = { vec3(0) };
 
 void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const vec3& impulse, float dt)
@@ -35,8 +33,8 @@ void SymplecticEuler(Particle& p, float mass, const vec3& force, const vec3& imp
 	vec3 accel = force / mass;
 	p.SetVelocity(p.Velocity() + (accel * dt) + (impulse));
 	p.SetPosition(p.Position() + (p.Velocity() * dt));
-	printf("Particle velocity = %s\n", glm::to_string(p.Velocity()).c_str());
-	printf("Particle position = %s\n", glm::to_string(p.Position()).c_str());
+	//printf("Particle velocity = %s\n", glm::to_string(p.Velocity()).c_str());
+	//printf("Particle position = %s\n", glm::to_string(p.Position()).c_str());
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
@@ -129,7 +127,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	prt_len = sizeof(particles) / sizeof(particles[0]);
 
-	camera = Camera(vec3(0, 5, 10));
+	camera = Camera(vec3(0, 5, 20));
 	for (int x = 0; x < prt_len; x++)
 	{
 		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0.2 * x,0,0,1), vec3(x, 5, 0), vec3(0.1), 1, vec3(0));
@@ -144,7 +142,7 @@ void PhysicsEngine::Task1Init()
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {
-	printf("new frame \n");
+	//printf("new frame \n");
 
 	vec3 acceleration = GRAVITY;
 	for (int x = 0; x < prt_len; x++)
@@ -160,7 +158,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		}
 		else
 		{
-			Force::Hooke(particles[x], particles[x + 1], 1.f, 20.f, 0.9f);
+			Force::Hooke(particles[x], particles[x + 1], 1.f, 10.f, 0.9f);
 		}
 	}
 	for (int x = 0; x < prt_len; x++)
@@ -180,8 +178,10 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 // This is called every frame
 void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
-	double timeStep = 0.005;
+	double timeStep = 0.002;
 	float alpha = 0;
+	double physAcca = 0.0;
+
 	if (deltaTime > 0.25)
 	{
 		deltaTime = 0.25;
@@ -192,7 +192,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// TODO: Handle collisions and calculate impulse
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		Task1Update(deltaTime, totalTime);
+		Task1Update(timeStep, totalTime);
 		totalTime += timeStep;
 		physAcca -= timeStep;
 	}
