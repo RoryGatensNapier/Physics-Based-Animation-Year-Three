@@ -2,16 +2,13 @@
 #include "Application.h"
 #include "Camera.h"
 #include "Force.h"
+#include <glm/gtx/string_cast.hpp>
 
 using namespace glm;
 
 const glm::vec3 GRAVITY = glm::vec3(0, -9.81, 0);
 
-double totalTime = 0.0;
 double physAcca = 0.0;
-
-Particle particles[5];
-const int prt_len = sizeof(particles) / sizeof(particles[0]);
 
 //vec3 phys_log_Pos[prt_len], phys_log_Vel[prt_len], p_arr[prt_len], v_arr[prt_len] = { vec3(0) };
 
@@ -38,6 +35,9 @@ void SymplecticEuler(Particle& p, float mass, const vec3& force, const vec3& imp
 	vec3 accel = force / mass;
 	p.SetVelocity(p.Velocity() + (accel * dt) + (impulse));
 	p.SetPosition(p.Position() + (p.Velocity() * dt));
+	printf("Particle velocity = %s\n", glm::to_string(p.Velocity()).c_str());
+	printf("Particle position = %s\n", glm::to_string(p.Position()).c_str());
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
@@ -127,14 +127,15 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetShader(defaultShader);
 	ground.SetScale(vec3(10.0f));
 
+	prt_len = sizeof(particles) / sizeof(particles[0]);
+
 	camera = Camera(vec3(0, 5, 10));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0.2 * x,0,0,1), vec3(0, 5-x, 0), vec3(0.1), 1, vec3(0));
-		//p_arr[x] = particles[x].Position();
-		//v_arr[x] = particles[x].Velocity();
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0.2 * x,0,0,1), vec3(x, 5, 0), vec3(0.1), 1, vec3(0));
 	}
 	particles[0].SetFixed();
+	//particles[4].SetFixed();
 }
 
 void PhysicsEngine::Task1Init()
@@ -149,18 +150,17 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	for (int x = 0; x < prt_len; x++)
 	{
 		particles[x].ClearForcesImpulses();
-		//p_arr[x] = particles[x].Position(), v_arr[x] = particles[x].Velocity();
 		if (!particles[x].IsFixed())
 		{
 			Force::Gravity(particles[x]);
 		}
-		if (x > prt_len)
+		if (x + 1 > prt_len)
 		{
 			continue;
 		}
 		else
 		{
-			Force::Hooke(particles[x], particles[x + 1], 1.f, 10.f, 0.5f);
+			Force::Hooke(particles[x], particles[x + 1], 1.f, 20.f, 0.9f);
 		}
 	}
 	for (int x = 0; x < prt_len; x++)
@@ -180,7 +180,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 // This is called every frame
 void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
-	double timeStep = 0.001;
+	double timeStep = 0.005;
 	float alpha = 0;
 	if (deltaTime > 0.25)
 	{

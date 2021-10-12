@@ -26,4 +26,6 @@ private:
 
 
 	PhysicsBody ground;
+	Particle particles[2];
+	int prt_len;
 };
