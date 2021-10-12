@@ -166,7 +166,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		}
 		else
 		{
-			Force::Hooke(particles[x], particles[x - 1], 0.25f, 25.f, 0.95f);
+			Force::Hooke(particles[x], particles[x - 1], 0.25f, 25.f, 0.9f);
 		}
 	}
 	for (int x = 0; x < prt_len; x++)
@@ -201,9 +201,6 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	physAcca += deltaTime;
 	while (physAcca >= timeStep)
 	{
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// TODO: Handle collisions and calculate impulse
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		Task1Update(timeStep, totalTime);
 		totalTime += timeStep;
 		physAcca -= timeStep;
