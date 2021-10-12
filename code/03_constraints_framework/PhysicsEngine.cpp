@@ -132,8 +132,6 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetShader(defaultShader);
 	ground.SetScale(vec3(10.0f));
 
-	prt_len = sizeof(particles) / sizeof(particles[0]);
-
 	camera = Camera(vec3(0, 5, 20));
 	for (int x = 0; x < prt_len; x++)
 	{
@@ -168,7 +166,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		}
 		else
 		{
-			Force::Hooke(particles[x], particles[x - 1], 0.1f, 10.f, 0.9f);
+			Force::Hooke(particles[x], particles[x - 1], 0.25f, 25.f, 0.95f);
 		}
 	}
 	for (int x = 0; x < prt_len; x++)
