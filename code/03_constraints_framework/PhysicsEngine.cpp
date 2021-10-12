@@ -137,7 +137,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 20));
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, vec4(0.2 * x,0,0,1), vec3(x*2, 10, 0), vec3(0.1), 1, vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, particle_colour[x], vec3(x*2, 10, 0), vec3(0.1), 1, vec3(0));
 	}
 	particles[0].SetFixed();
 	//particles[4].SetFixed();

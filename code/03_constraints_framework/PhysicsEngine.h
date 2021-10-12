@@ -27,5 +27,8 @@ private:
 
 	PhysicsBody ground;
 	Particle particles[5] = {};
+
+	glm::vec4 particle_colour[5] = { glm::vec4(1,0,0,1), glm::vec4(0,1,0,1), glm::vec4(0,0,1,1), glm::vec4(1,0,1,1), glm::vec4(1,1,0,1) };
+
 	int prt_len = sizeof(particles)/sizeof(particles[0]);
 };
