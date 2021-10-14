@@ -131,7 +131,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetShader(defaultShader);
 	ground.SetScale(vec3(10.0f));
 
-	camera = Camera(vec3(0, 5, 20));
+	camera = Camera(vec3(0, 10, 30));
 	Task1Init(meshDb, defaultShader);
 	//InitClothSim(meshDb, defaultShader);
 }
