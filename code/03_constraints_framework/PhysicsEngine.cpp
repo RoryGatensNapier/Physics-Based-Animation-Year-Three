@@ -280,7 +280,7 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 // This is called every frame, after Update
 void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 {
-	ground.Draw(viewMatrix, projMatrix);
+	//ground.Draw(viewMatrix, projMatrix);
 	/*for (auto x : particles)
 	{
 		x.Draw(viewMatrix, projMatrix);
