@@ -39,7 +39,7 @@ void SymplecticEuler(Particle& p, float mass, const vec3& force, const vec3& imp
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.8f)
+vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.9f)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
@@ -53,11 +53,13 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 		impulse += vec3((pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
 		if (pobj.Velocity().x > 0)
 		{
-			pobj.SetPosition(vec3(pobj.Position().x - 1.f, pobj.Position().y, pobj.Position().z));
+			//pobj.SetPosition(vec3(pobj.Position().x - 1.f, pobj.Position().y, pobj.Position().z));
+			pobj.Translate(vec3(-0.2f, 0, 0));
 		}
 		else
 		{
-			pobj.SetPosition(vec3(pobj.Position().x + 1.f, pobj.Position().y, pobj.Position().z));
+			//pobj.SetPosition(vec3(pobj.Position().x + 1.f, pobj.Position().y, pobj.Position().z));
+			pobj.Translate(vec3(0.2f, 0, 0));
 		}
 	}
 	if (pobj.Position().y >= cubeCentre.y + (cubeHalfExtent) || pobj.Position().y <= cubeCentre.y - (cubeHalfExtent - 1))
@@ -65,11 +67,13 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 		impulse += vec3(pobj.Velocity().x, (pobj.Velocity().y * -coefficientOfRestitution), pobj.Velocity().z);
 		if (pobj.Velocity().y > 0)
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y - 1.f, pobj.Position().z));
+			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y - 1.f, pobj.Position().z));
+			pobj.Translate(vec3(0, -0.2f, 0));
 		}
 		else
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y + 1.f, pobj.Position().z));
+			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y + 1.f, pobj.Position().z));
+			pobj.Translate(vec3(0, 0.2f, 0));
 		}
 	}
 	if (pobj.Position().z >= cubeCentre.z + (cubeHalfExtent) || pobj.Position().z <= cubeCentre.z - (cubeHalfExtent - 1))
@@ -77,11 +81,13 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 		impulse += vec3(pobj.Velocity().x, pobj.Velocity().y, (pobj.Velocity().z * -coefficientOfRestitution));
 		if (pobj.Velocity().z > 0)
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z - 1.f));
+			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z - 1.f));
+			pobj.Translate(vec3(0, 0, -0.2f));
 		}
 		else
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z + 1.f));
+			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z + 1.f));
+			pobj.Translate(vec3(0, 0, 0.2f));
 		}
 	}
 	return impulse;
@@ -141,7 +147,7 @@ void PhysicsEngine::Task1Init(MeshDb& meshDb, const Shader* defaultShader)
 {
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0, 0, 0, 1), vec3(x * 2, 5, x), vec3(0.1), 1, vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0, 0, 0, 1), vec3(x/2, 10, 0), vec3(0.1), 1, vec3(0));
 	}
 	particles[0].SetFixed();
 }
@@ -180,12 +186,12 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		}
 		else
 		{
-			Force::Hooke(particles[x], particles[x - 1], 1.f, 15.f, 0.95f);
+			Force::Hooke(particles[x], particles[x - 1], 0.25f, 35.f, 0.95f);
 		}
 	}
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x].ApplyImpulse(CollisionImpulse(particles[x], vec3(0, 5, 0), 5));
+		particles[x].ApplyImpulse(CollisionImpulse(particles[x], vec3(0, 10, 0), 10));
 	}
 	for (int x = 0; x < prt_len; x++)
 	{

@@ -5,7 +5,7 @@
 
 #include "PhysicsObject.h"
 
-#define LEN 3
+#define LEN 10
 
 // Fwd declaration
 class MeshDb;
