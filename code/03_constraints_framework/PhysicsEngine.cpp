@@ -39,7 +39,7 @@ void SymplecticEuler(Particle& p, float mass, const vec3& force, const vec3& imp
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.9f)
+vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHalfExtent, float coefficientOfRestitution = 0.8f)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
@@ -50,38 +50,38 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	float nudge = 0;
 	if (pobj.Position().x >= cubeCentre.x + (cubeHalfExtent) || pobj.Position().x <= cubeCentre.x - (cubeHalfExtent - 1))
 	{
-		impulse += vec3(2 * (pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
+		impulse += vec3((pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
 		if (pobj.Velocity().x > 0)
 		{
-			pobj.SetPosition(vec3(pobj.Position().x - 0.1f, pobj.Position().y, pobj.Position().z));
+			pobj.SetPosition(vec3(pobj.Position().x - 1.f, pobj.Position().y, pobj.Position().z));
 		}
 		else
 		{
-			pobj.SetPosition(vec3(pobj.Position().x + 0.1f, pobj.Position().y, pobj.Position().z));
+			pobj.SetPosition(vec3(pobj.Position().x + 1.f, pobj.Position().y, pobj.Position().z));
 		}
 	}
 	if (pobj.Position().y >= cubeCentre.y + (cubeHalfExtent) || pobj.Position().y <= cubeCentre.y - (cubeHalfExtent - 1))
 	{
-		impulse += vec3(pobj.Velocity().x, 2 * (pobj.Velocity().y * -coefficientOfRestitution), pobj.Velocity().z);
+		impulse += vec3(pobj.Velocity().x, (pobj.Velocity().y * -coefficientOfRestitution), pobj.Velocity().z);
 		if (pobj.Velocity().y > 0)
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y - 0.1f, pobj.Position().z));
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y - 1.f, pobj.Position().z));
 		}
 		else
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y + 0.1f, pobj.Position().z));
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y + 1.f, pobj.Position().z));
 		}
 	}
 	if (pobj.Position().z >= cubeCentre.z + (cubeHalfExtent) || pobj.Position().z <= cubeCentre.z - (cubeHalfExtent - 1))
 	{
-		impulse += vec3(pobj.Velocity().x, pobj.Velocity().y, 2 * (pobj.Velocity().z * -coefficientOfRestitution));
+		impulse += vec3(pobj.Velocity().x, pobj.Velocity().y, (pobj.Velocity().z * -coefficientOfRestitution));
 		if (pobj.Velocity().z > 0)
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z - 0.1f));
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z - 1.f));
 		}
 		else
 		{
-			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z + 0.1f));
+			pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z + 1.f));
 		}
 	}
 	return impulse;
@@ -133,8 +133,8 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetScale(vec3(10.0f));
 
 	camera = Camera(vec3(0, 5, 20));
-	//Task1Init(meshDb, defaultShader);
-	InitClothSim(meshDb, defaultShader);
+	Task1Init(meshDb, defaultShader);
+	//InitClothSim(meshDb, defaultShader);
 }
 
 void PhysicsEngine::Task1Init(MeshDb& meshDb, const Shader* defaultShader)
@@ -265,8 +265,8 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	physAcca += deltaTime;
 	while (physAcca >= timeStep)
 	{
-		//Task1Update(timeStep, totalTime);
-		TaskClothSim(timeStep, totalTime);
+		Task1Update(timeStep, totalTime);
+		//TaskClothSim(timeStep, totalTime);
 		totalTime += timeStep;
 		physAcca -= timeStep;
 	}
@@ -280,18 +280,18 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 // This is called every frame, after Update
 void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 {
-	//ground.Draw(viewMatrix, projMatrix);
-	/*for (auto x : particles)
+	ground.Draw(viewMatrix, projMatrix);
+	for (auto x : particles)
 	{
 		x.Draw(viewMatrix, projMatrix);
-	}*/
-	for (int y = 0; y < prt_len; y++)
+	}
+	/*for (int y = 0; y < prt_len; y++)
 	{
 		for (int x = 0; x < prt_len; x++)
 		{
 			pt_2d[y][x].Draw(viewMatrix, projMatrix);
 		}
-	}
+	}*/
 }
 
 void PhysicsEngine::HandleInputKey(int keyCode, bool pressed)
