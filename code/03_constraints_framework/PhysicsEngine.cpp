@@ -47,7 +47,6 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 	int signage = 0;
 	float P_axisVals[3] = { pobj.Position().x, pobj.Position().y, pobj.Position().z };
 	float cube_axisVals[3] = { cubeCentre.x, cubeCentre.y, cubeCentre.z };
-	float nudge = 0;
 	if (pobj.Position().x >= cubeCentre.x + (cubeHalfExtent) || pobj.Position().x <= cubeCentre.x - (cubeHalfExtent - 1))
 	{
 		impulse += vec3((pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
