@@ -5,6 +5,8 @@
 
 #include "PhysicsObject.h"
 
+#define LEN 3
+
 // Fwd declaration
 class MeshDb;
 class ShaderDb;
@@ -18,17 +20,19 @@ public:
 	void Display(const glm::mat4& viewMatrix, const glm::mat4& projMatrix);
 	void HandleInputKey(int keyCode, bool pressed);
 
-	void Task1Init();
+	void Task1Init(MeshDb& meshDb, const Shader* defaultShader);
 	void Task1Update(float deltaTime, float totalTime); // 5-particle chain
 	// ... rest of the tasks here
+
+	void TaskClothSim(float deltaTime, float totalTime);
+	void InitClothSim(MeshDb& meshDb, const Shader* defaultShader);
 
 private:
 
 
 	PhysicsBody ground;
-	Particle particles[5] = {};
-
-	glm::vec4 particle_colour[5] = { glm::vec4(1,0,0,1), glm::vec4(0,1,0,1), glm::vec4(0,0,1,1), glm::vec4(1,0,1,1), glm::vec4(1,1,0,1) };
-
-	int prt_len = sizeof(particles)/sizeof(particles[0]);
+	int prt_len = LEN;
+	Particle particles[LEN] = {};
+	Particle pt_2d[LEN][LEN] = {};
+	//glm::vec4 particle_colour[5] = { glm::vec4(1,0,0,1), glm::vec4(0,1,0,1), glm::vec4(0,0,1,1), glm::vec4(1,0,1,1), glm::vec4(1,1,0,1) };
 };

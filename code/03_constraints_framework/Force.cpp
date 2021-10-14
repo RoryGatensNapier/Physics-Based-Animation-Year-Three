@@ -20,8 +20,6 @@ void Force::Drag(Particle& p)
 
 void Force::Hooke(Particle& p1, Particle& p2, float restLength, float ks, float kd)
 {
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// TODO: Should return the aerodynamic drag force
 	float curLength = glm::distance(p1.Position(), p2.Position());
 	//printf("Current length = %f\n", curLength);
 	if (curLength <= 0)
@@ -35,13 +33,6 @@ void Force::Hooke(Particle& p1, Particle& p2, float restLength, float ks, float 
 	auto forceSD_p2 = -(ks * (restLength - curLength)) - (kd * p2_vel1D);
 	auto force_p1 = forceSD_p1 * unitVector;
 	auto force_p2 = -forceSD_p2 * unitVector;
-	/*auto forceSpring = -ks * (restLength - curLength);
-	auto forceDamp_p1 = -kd * p1.Velocity();
-	auto forceDamp_p2 = -kd * p2.Velocity();
-	auto forceSD_p1 = forceSpring + forceDamp_p1;
-	auto forceSD_p2 = forceSpring + forceDamp_p2;
-	auto finalForce_p1 = forceSD_p1 * p1_vel1D;
-	auto finalForce_p2 = -forceSD_p2 * p2_vel1D;*/
 	if (p1.IsFixed())
 	{
 		p1.ApplyForce(vec3(0));
