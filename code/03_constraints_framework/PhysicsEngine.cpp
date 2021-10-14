@@ -52,12 +52,10 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 		impulse += vec3((pobj.Velocity().x * -coefficientOfRestitution), pobj.Velocity().y, pobj.Velocity().z);
 		if (pobj.Velocity().x > 0)
 		{
-			//pobj.SetPosition(vec3(pobj.Position().x - 1.f, pobj.Position().y, pobj.Position().z));
 			pobj.Translate(vec3(-0.2f, 0, 0));
 		}
 		else
 		{
-			//pobj.SetPosition(vec3(pobj.Position().x + 1.f, pobj.Position().y, pobj.Position().z));
 			pobj.Translate(vec3(0.2f, 0, 0));
 		}
 	}
@@ -66,12 +64,10 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 		impulse += vec3(pobj.Velocity().x, (pobj.Velocity().y * -coefficientOfRestitution), pobj.Velocity().z);
 		if (pobj.Velocity().y > 0)
 		{
-			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y - 1.f, pobj.Position().z));
 			pobj.Translate(vec3(0, -0.2f, 0));
 		}
 		else
 		{
-			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y + 1.f, pobj.Position().z));
 			pobj.Translate(vec3(0, 0.2f, 0));
 		}
 	}
@@ -80,12 +76,10 @@ vec3 CollisionImpulse(Particle& pobj, const glm::vec3& cubeCentre, float cubeHal
 		impulse += vec3(pobj.Velocity().x, pobj.Velocity().y, (pobj.Velocity().z * -coefficientOfRestitution));
 		if (pobj.Velocity().z > 0)
 		{
-			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z - 1.f));
 			pobj.Translate(vec3(0, 0, -0.2f));
 		}
 		else
 		{
-			//pobj.SetPosition(vec3(pobj.Position().x, pobj.Position().y, pobj.Position().z + 1.f));
 			pobj.Translate(vec3(0, 0, 0.2f));
 		}
 	}
@@ -146,7 +140,7 @@ void PhysicsEngine::Task1Init(MeshDb& meshDb, const Shader* defaultShader)
 {
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0, 0, 0, 1), vec3(x/2, 10, 0), vec3(0.1), 1, vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0, 0, 0, 1), vec3(x/2, 19, 0), vec3(0.1), 1, vec3(0));
 	}
 	particles[0].SetFixed();
 }
@@ -185,7 +179,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		}
 		else
 		{
-			Force::Hooke(particles[x], particles[x - 1], 0.25f, 35.f, 0.95f);
+			Force::Hooke(particles[x], particles[x - 1], 0.1f, 35.f, 1.f);
 		}
 	}
 	for (int x = 0; x < prt_len; x++)
