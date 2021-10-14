@@ -27,9 +27,6 @@ public:
 	void TaskClothSim(float deltaTime, float totalTime);
 	void InitClothSim(MeshDb& meshDb, const Shader* defaultShader);
 
-	void InitClothV2(MeshDb& meshDb, const Shader* defaultShader);
-	void TaskClothSimV2(float deltaTime, float totalTime);
-
 private:
 
 
@@ -39,5 +36,6 @@ private:
 	Particle pt_2d[LEN][LEN] = {};
 	node_Particle p_nodes[LEN][LEN] = {};
 	bool toggleSim = false;
+	int simMode = 1;
 	//glm::vec4 particle_colour[5] = { glm::vec4(1,0,0,1), glm::vec4(0,1,0,1), glm::vec4(0,0,1,1), glm::vec4(1,0,1,1), glm::vec4(1,1,0,1) };
 };

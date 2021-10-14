@@ -132,9 +132,8 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetScale(vec3(10.0f));
 
 	camera = Camera(vec3(0, 10, 30));
-	//Task1Init(meshDb, defaultShader);
-	//InitClothSim(meshDb, defaultShader);
-	InitClothV2(meshDb, defaultShader);
+	Task1Init(meshDb, defaultShader);
+	InitClothSim(meshDb, defaultShader);
 }
 
 void PhysicsEngine::Task1Init(MeshDb& meshDb, const Shader* defaultShader)
@@ -144,19 +143,6 @@ void PhysicsEngine::Task1Init(MeshDb& meshDb, const Shader* defaultShader)
 		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0.1 * x, 0.1 * x, 0.1 * x, 1), vec3(x/2, 19, 0), vec3(0.1), 1, vec3(0));
 	}
 	particles[0].SetFixed();
-}
-
-void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
-{
-	for (int y = 0; y < prt_len; y++)
-	{
-		for (int x = 0; x < prt_len; x++)
-		{
-			pt_2d[y][x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0, 0, 0, 1), vec3(x-1, prt_len - y, 0), vec3(0.1), 1, vec3(0));
-		}
-	}
-	pt_2d[0][0].SetFixed();
-	pt_2d[0][prt_len-1].SetFixed();
 }
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
@@ -200,58 +186,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	}
 }
 
-void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
-{
-	for (int y = prt_len - 1; y > -1; y--)
-	{
-		for (int x = prt_len - 1; x > -1; x--)
-		{
-			pt_2d[y][x].ClearForcesImpulses();
-		}
-	}
-	for (int y = prt_len - 1; y > -1; y--)
-	{
-		for (int x = prt_len - 1; x > -1; x--)
-		{
-			if (!pt_2d[y][x].IsFixed())
-			{
-				Force::Gravity(pt_2d[y][x]);
-			}
-			/*Force::Hooke(pt_2d[y][x], pt_2d[y][x + 1], 1.f, 15.f, 0.95f);
-			Force::Hooke(pt_2d[y][x], pt_2d[y][x - 1], 1.f, 15.f, 0.95f);
-			Force::Hooke(pt_2d[y][x], pt_2d[y + 1][x - 1], 1.f, 15.f, 0.95f);
-			Force::Hooke(pt_2d[y][x], pt_2d[y + 1][x + 1], 1.f, 15.f, 0.95f);
-			Force::Hooke(pt_2d[y][x], pt_2d[y + 1][x], 1.f, 15.f, 0.95f);
-			Force::Hooke(pt_2d[y][x], pt_2d[y - 1][x + 1], 1.f, 15.f, 0.95f);
-			Force::Hooke(pt_2d[y][x], pt_2d[y - 1][x - 1], 1.f, 15.f, 0.95f);
-			Force::Hooke(pt_2d[y][x], pt_2d[y - 1][x], 1.f, 15.f, 0.95f);*/
-			Particle* pt_ch[8] = { &pt_2d[y - 1][x + 1], &pt_2d[y - 1][x], &pt_2d[y - 1][x - 1], &pt_2d[y][x + 1], &pt_2d[y][x-1] , &pt_2d[y + 1][x + 1] , &pt_2d[y + 1][x], &pt_2d[y + 1][x - 1] };
-			for (int ch = 0; ch < 8; ch++)
-			{
-				if (pt_ch[ch] != NULL)
-				{
-					Force::Hooke(pt_2d[y][x], *pt_ch[ch], 1.f, 15.f, 0.95f);
-				}
-			}
-		}
-	}
-	for (int y = prt_len - 1; y > -1; y--)
-	{
-		for (int x = prt_len - 1; x > -1; x--)
-		{
-			if (pt_2d[y][x].IsFixed())
-			{
-				SymplecticEuler(pt_2d[y][x], pt_2d[y][x].Mass(), vec3(0), vec3(0), deltaTime);
-			}
-			else
-			{
-				SymplecticEuler(pt_2d[y][x], pt_2d[y][x].Mass(), pt_2d[y][x].AccumulatedForce(), pt_2d[y][x].AccumulatedImpulse(), deltaTime);
-			}
-		}
-	}
-}
-
-void PhysicsEngine::InitClothV2(MeshDb& meshDb, const Shader* defaultShader)
+void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 {
 	for (int y = 0; y < prt_len; y++)
 	{
@@ -295,7 +230,7 @@ void PhysicsEngine::InitClothV2(MeshDb& meshDb, const Shader* defaultShader)
 	p_nodes[LEN - 1][LEN - 1].base.SetFixed();
 }
 
-void PhysicsEngine::TaskClothSimV2(float deltaTime, float totalTime)
+void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 {
 	for (int y = 0; y < prt_len; y++)
 	{
@@ -354,11 +289,19 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	physAcca += deltaTime;
 	while (physAcca >= timeStep)
 	{
-		//Task1Update(timeStep, totalTime);
-		//TaskClothSim(timeStep, totalTime);
 		if (toggleSim)
 		{
-			TaskClothSimV2(timeStep, totalTime);
+			switch (simMode)
+			{
+			case 0:
+				break;
+			case 1:
+				Task1Update(timeStep, totalTime);
+				break;
+			case 2:
+				TaskClothSim(timeStep, totalTime);
+				break;
+			}
 		}
 		totalTime += timeStep;
 		physAcca -= timeStep;
@@ -374,22 +317,21 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 {
 	ground.Draw(viewMatrix, projMatrix);
-	/*for (auto x : particles)
+	switch (simMode)
 	{
-		x.Draw(viewMatrix, projMatrix);
-	}*/
-	/*for (int y = 0; y < prt_len; y++)
-	{
-		for (int x = 0; x < prt_len; x++)
+	case 1:
+		for (auto x : particles)
 		{
-			pt_2d[y][x].Draw(viewMatrix, projMatrix);
+			x.Draw(viewMatrix, projMatrix);
 		}
-	}*/
-	for (int y = 0; y < prt_len; y++)
-	{
-		for (int x = 0; x < prt_len; x++)
+		break;
+	case 2:
+		for (int y = 0; y < prt_len; y++)
 		{
-			p_nodes[y][x].base.Draw(viewMatrix, projMatrix);
+			for (int x = 0; x < prt_len; x++)
+			{
+				p_nodes[y][x].base.Draw(viewMatrix, projMatrix);
+			}
 		}
 	}
 }
@@ -404,8 +346,17 @@ void PhysicsEngine::HandleInputKey(int keyCode, bool pressed)
 			toggleSim = !toggleSim;
 		}
 		break;
+	case 48:
+		simMode = 0;
+		break;
+	case 49:
+		simMode = 1;
+		break;
+	case 50:
+		simMode = 2;
+		break;
 	default:
-		//printf("key code = %d\n", keyCode);
+		printf("key code = %d\n", keyCode);
 		break;
 	}
 }
