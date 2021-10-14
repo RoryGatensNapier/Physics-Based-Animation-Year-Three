@@ -140,7 +140,7 @@ void PhysicsEngine::Task1Init(MeshDb& meshDb, const Shader* defaultShader)
 {
 	for (int x = 0; x < prt_len; x++)
 	{
-		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0, 0, 0, 1), vec3(x/2, 19, 0), vec3(0.1), 1, vec3(0));
+		particles[x] = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0.1 * x, 0.1 * x, 0.1 * x, 1), vec3(x/2, 19, 0), vec3(0.1), 1, vec3(0));
 	}
 	particles[0].SetFixed();
 }
