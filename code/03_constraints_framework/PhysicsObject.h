@@ -128,3 +128,9 @@ private:
 	glm::vec3 m_accumulatedForce = glm::vec3(0.0f);		// Accumulated force in a single simulation step
 	glm::vec3 m_accumulatedImpulse = glm::vec3(0.0f);	// Accumulated impulse in a single simulation step
 };
+
+struct node_Particle
+{
+	Particle base;
+	std::vector<Particle> neighbors;
+};

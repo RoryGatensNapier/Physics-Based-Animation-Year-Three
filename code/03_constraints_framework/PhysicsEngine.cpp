@@ -132,8 +132,9 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetScale(vec3(10.0f));
 
 	camera = Camera(vec3(0, 10, 30));
-	Task1Init(meshDb, defaultShader);
+	//Task1Init(meshDb, defaultShader);
 	//InitClothSim(meshDb, defaultShader);
+	InitClothV2(meshDb, defaultShader);
 }
 
 void PhysicsEngine::Task1Init(MeshDb& meshDb, const Shader* defaultShader)
@@ -250,6 +251,95 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 	}
 }
 
+void PhysicsEngine::InitClothV2(MeshDb& meshDb, const Shader* defaultShader)
+{
+	for (int y = 0; y < prt_len; y++)
+	{
+		for (int x = 0; x < prt_len; x++)
+		{
+			p_nodes[y][x].base = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0.1 * x, 0.1 * y, 0, 1), vec3(x-4.5, y+2, 0), vec3(0.1), 1, vec3(0));
+		}
+	}
+	for (int y = 0; y < prt_len; y++)
+	{
+		for (int x = 0; x < prt_len; x++)
+		{
+			if (x < prt_len - 1)
+			{
+				p_nodes[y][x].neighbors.push_back(p_nodes[y][x + 1].base);
+				p_nodes[y][x + 1].neighbors.push_back(p_nodes[y][x].base);
+			}
+			if (y < prt_len - 1)
+			{
+				p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x].base);
+				p_nodes[y + 1][x].neighbors.push_back(p_nodes[y][x].base);
+			}
+			if (x < prt_len - 1 && y < prt_len - 1)
+			{
+				p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x + 1].base);
+				p_nodes[y + 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
+			}
+			if (x < prt_len - 1 && y > 1)
+			{
+				p_nodes[y][x].neighbors.push_back(p_nodes[y - 1][x + 1].base);
+				p_nodes[y - 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
+			}
+			if (x > 1 && y > 1)
+			{
+				p_nodes[y][x].neighbors.push_back(p_nodes[y - 1][x - 1].base);
+				p_nodes[y - 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
+			}
+		}
+	}
+	p_nodes[LEN - 1][0].base.SetFixed();
+	p_nodes[LEN - 1][LEN - 1].base.SetFixed();
+}
+
+void PhysicsEngine::TaskClothSimV2(float deltaTime, float totalTime)
+{
+	for (int y = 0; y < prt_len; y++)
+	{
+		for (int x = 0; x < prt_len; x++)
+		{
+			p_nodes[y][x].base.ClearForcesImpulses();
+		}
+	}
+	for (int y = prt_len - 1; y > -1; y--)
+	{
+		for (int x = prt_len - 1; x > -1; x--)
+		{
+			if (!pt_2d[y][x].IsFixed())
+			{
+				Force::Gravity(p_nodes[y][x].base);
+			}
+		}
+	}
+	for (int y = prt_len - 1; y > -1; y--)
+	{
+		for (int x = prt_len - 1; x > -1; x--)
+		{
+			for (auto neighbor : p_nodes[y][x].neighbors)
+			{
+				Force::Hooke(p_nodes[y][x].base, neighbor, sqrt(2.f), 15.f, 1.f);
+			}
+		}
+	}
+	for (int y = prt_len - 1; y > -1; y--)
+	{
+		for (int x = prt_len - 1; x > -1; x--)
+		{
+			if (p_nodes[y][x].base.IsFixed())
+			{
+				SymplecticEuler(p_nodes[y][x].base, p_nodes[y][x].base.Mass(), vec3(0), vec3(0), deltaTime);
+			}
+			else
+			{
+				SymplecticEuler(p_nodes[y][x].base, p_nodes[y][x].base.Mass(), p_nodes[y][x].base.AccumulatedForce(), p_nodes[y][x].base.AccumulatedImpulse(), deltaTime);
+			}
+		}
+	}
+}
+
 // This is called every frame
 void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
@@ -264,8 +354,12 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 	physAcca += deltaTime;
 	while (physAcca >= timeStep)
 	{
-		Task1Update(timeStep, totalTime);
+		//Task1Update(timeStep, totalTime);
 		//TaskClothSim(timeStep, totalTime);
+		if (toggleSim)
+		{
+			TaskClothSimV2(timeStep, totalTime);
+		}
 		totalTime += timeStep;
 		physAcca -= timeStep;
 	}
@@ -280,10 +374,10 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 {
 	ground.Draw(viewMatrix, projMatrix);
-	for (auto x : particles)
+	/*for (auto x : particles)
 	{
 		x.Draw(viewMatrix, projMatrix);
-	}
+	}*/
 	/*for (int y = 0; y < prt_len; y++)
 	{
 		for (int x = 0; x < prt_len; x++)
@@ -291,13 +385,27 @@ void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 			pt_2d[y][x].Draw(viewMatrix, projMatrix);
 		}
 	}*/
+	for (int y = 0; y < prt_len; y++)
+	{
+		for (int x = 0; x < prt_len; x++)
+		{
+			p_nodes[y][x].base.Draw(viewMatrix, projMatrix);
+		}
+	}
 }
 
 void PhysicsEngine::HandleInputKey(int keyCode, bool pressed)
 {
 	switch (keyCode)
 	{
+	case 32:
+		if (pressed)
+		{
+			toggleSim = !toggleSim;
+		}
+		break;
 	default:
+		//printf("key code = %d\n", keyCode);
 		break;
 	}
 }
