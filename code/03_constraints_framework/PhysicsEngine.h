@@ -36,7 +36,8 @@ private:
 	Particle particles[LEN] = {};
 	Particle pt_2d[LEN][LEN] = {};
 	node_Particle p_nodes[LEN][LEN] = {};
-	bool toggleSim = false;
+	bool toggleSim, toggleBlowDryer = false;
 	int simMode = 1;
+
 	//glm::vec4 particle_colour[5] = { glm::vec4(1,0,0,1), glm::vec4(0,1,0,1), glm::vec4(0,0,1,1), glm::vec4(1,0,1,1), glm::vec4(1,1,0,1) };
 };

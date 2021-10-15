@@ -241,7 +241,10 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 			if (p_nodes[y][x].base.IsFixed() == false)
 			{
 				Force::Gravity(p_nodes[y][x].base);
-				Force::BlowDryer(p_nodes[y][x].base, 0, 4, 3, 0);
+				if (toggleBlowDryer)
+				{
+					Force::BlowDryer(p_nodes[y][x].base, 0, 4, 3, 0);
+				}
 			}
 			for (Particle* neighbor : p_nodes[y][x].neighbors)
 			{
@@ -344,6 +347,12 @@ void PhysicsEngine::HandleInputKey(int keyCode, bool pressed)
 		break;
 	case 50:
 		simMode = 2;
+		break;
+	case 70:
+		if (pressed)
+		{
+			toggleBlowDryer = !toggleBlowDryer;
+		}
 		break;
 	default:
 		printf("key code = %d\n", keyCode);
