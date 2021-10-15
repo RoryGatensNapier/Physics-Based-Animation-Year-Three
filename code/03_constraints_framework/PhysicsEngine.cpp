@@ -192,7 +192,7 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 	{
 		for (int x = 0; x < prt_len; x++)
 		{
-			p_nodes[y][x].base = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0.1 * x, 0.1 * y, 0, 1), vec3(x-4.5, y+2, 0), vec3(0.1), 1, vec3(0));
+			p_nodes[y][x].base = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0.1 * x, 0.1 * y, 0, 1), vec3(x-5, y+2, 0), vec3(0.1), 1, vec3(0));
 		}
 	}
 	for (int y = 0; y < prt_len; y++)
@@ -203,26 +203,26 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 			{
 				if (x < prt_len - 1 && y < prt_len - 1)
 				{
-					p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x + 1].base);
-					p_nodes[y + 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
+					//p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x + 1].base);
+					//p_nodes[y + 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
 				}
-				p_nodes[y][x].neighbors.push_back(p_nodes[y][x + 1].base);
-				p_nodes[y][x + 1].neighbors.push_back(p_nodes[y][x].base);
+				p_nodes[y][x].neighbors.push_back(&p_nodes[y][x + 1].base);
+				p_nodes[y][x + 1].neighbors.push_back(&p_nodes[y][x].base);
 			}
 			if (x > 0 && y < prt_len - 1)
 			{
-				p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x - 1].base);
-				p_nodes[y + 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
+				//p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x - 1].base);
+				//p_nodes[y + 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
 			}
 			if (y < prt_len - 1)
 			{
-				p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x].base);
-				p_nodes[y + 1][x].neighbors.push_back(p_nodes[y][x].base);
+				p_nodes[y][x].neighbors.push_back(&p_nodes[y + 1][x].base);
+				p_nodes[y + 1][x].neighbors.push_back(&p_nodes[y][x].base);
 			}
 		}
 	}
-	p_nodes[LEN - 1][0].base.SetFixed();
-	//p_nodes[LEN - 1][LEN - 1].base.SetFixed();
+	p_nodes[prt_lim][0].base.SetFixed();
+	p_nodes[prt_lim][prt_lim].base.SetFixed();
 }
 
 void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
@@ -234,30 +234,27 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 			p_nodes[y][x].base.ClearForcesImpulses();
 		}
 	}
-	for (int y = prt_len - 1; y > -1; y--)
+	for (int y = 0; y < prt_len; y++)
 	{
-		for (int x = prt_len - 1; x > -1; x--)
+		for (int x = 0; x < prt_len; x++)
 		{
-			if (!p_nodes[y][x].base.IsFixed())
+			if (p_nodes[y][x].base.IsFixed() == false)
 			{
 				Force::Gravity(p_nodes[y][x].base);
+				if (y == 0)
+				{
+					p_nodes[y][x].base.ApplyForce(vec3(0, 0, -2));
+				}
 			}
-			for (Particle neighbor : p_nodes[y][x].neighbors)
+			for (Particle* neighbor : p_nodes[y][x].neighbors)
 			{
-				Force::Hooke(p_nodes[y][x].base, neighbor, sqrt(2.f), 30.f, 0.9f);
+				Force::Hooke(p_nodes[y][x].base, *neighbor, sqrt(2.f), 30.f, 0.98f);
 			}
 		}
 	}
-	for (int y = prt_len - 1; y > -1; y--)
+	for (int y = 0; y < prt_len; y++)
 	{
-		for (int x = prt_len - 1; x > -1; x--)
-		{
-			
-		}
-	}
-	for (int y = prt_len - 1; y > -1; y--)
-	{
-		for (int x = prt_len - 1; x > -1; x--)
+		for (int x = 0; x < prt_len; x++)
 		{
 			if (p_nodes[y][x].base.IsFixed())
 			{
@@ -274,7 +271,7 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 // This is called every frame
 void PhysicsEngine::Update(float deltaTime, float totalTime)
 {
-	double timeStep = 0.005;
+	double timeStep = 0.001;
 	float alpha = 0;
 	double physAcca = 0.0;
 

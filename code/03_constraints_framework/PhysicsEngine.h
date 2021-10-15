@@ -32,6 +32,7 @@ private:
 
 	PhysicsBody ground;
 	int prt_len = LEN;
+	int prt_lim = LEN - 1;
 	Particle particles[LEN] = {};
 	Particle pt_2d[LEN][LEN] = {};
 	node_Particle p_nodes[LEN][LEN] = {};
