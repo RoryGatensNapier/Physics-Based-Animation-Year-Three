@@ -23,7 +23,7 @@ void Force::BlowDryer(Particle& particle, float cone_z_base, float cone_z_tip, f
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate blow dryer force
-	vec3 force = { 0,0,-25 };
+	vec3 force = { 0,0,-5 };
 	float posArr[3] = { particle.Position().x, particle.Position().y, particle.Position().z };
 	float linearMultiplier[sizeof(posArr)] = { 0 };
 	for (int x = 0; x < sizeof(posArr); x++)
@@ -66,12 +66,25 @@ void Force::Gravity(Particle& p)
 	p.ApplyForce(force);
 }
 
-void Force::Drag(Particle& p)
+void Force::Drag(Particle& p, Particle& p2, Particle& p3, vec3 vel_Air, float airDensity, float drag)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Should apply the aerodynamic drag force
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	vec3 v_surface = (p.Velocity() + p2.Velocity() + p3.Velocity());
+	v_surface = vec3(v_surface.x / 3, v_surface.y / 3, v_surface.z / 3);
+	auto v_computed = v_surface - vel_Air;
+	auto normal_top = glm::cross((p2.Position() - p.Position()), (p3.Position() - p.Position()));
+	auto normal = vec3(normal_top.x / normal_top.length(), normal_top.y / normal_top.length(), normal_top.z / normal_top.length());
+	auto area = 0.5f * (normal_top.length());
+	auto exposed_area = area * (glm::dot(v_computed, normal) / v_computed.length());
 
+	auto force_pt1 = 0.5f * (airDensity) * (pow(v_computed.length(), 2)) * drag * (exposed_area);
+	auto force = vec3(normal.x * force_pt1, normal.y * force_pt1, normal.z * force_pt1);
+	force = vec3(force.x / 3, force.y / 3, force.z / 3);
+	p.ApplyForce(force);
+	p2.ApplyForce(force);
+	p3.ApplyForce(force);
 }
 
 void Force::Hooke(Particle& p1, Particle& p2, float restLength, float ks, float kd)

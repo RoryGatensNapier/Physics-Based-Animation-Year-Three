@@ -207,6 +207,7 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 					p_nodes[y + 1][x + 1].neighbors.push_back(&p_nodes[y][x].base);
 				}
 				p_nodes[y][x].neighbors.push_back(&p_nodes[y][x + 1].base);
+				p_nodes[y][x].aeroGroup.push_back(&p_nodes[y][x + 1].base);
 				p_nodes[y][x + 1].neighbors.push_back(&p_nodes[y][x].base);
 			}
 			if (x > 0 && y < prt_len - 1)
@@ -217,6 +218,7 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 			if (y < prt_len - 1)
 			{
 				p_nodes[y][x].neighbors.push_back(&p_nodes[y + 1][x].base);
+				p_nodes[y][x].aeroGroup.push_back(&p_nodes[y + 1][x].base);
 				p_nodes[y + 1][x].neighbors.push_back(&p_nodes[y][x].base);
 			}
 		}
@@ -244,6 +246,10 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 				if (toggleBlowDryer)
 				{
 					Force::BlowDryer(p_nodes[y][x].base, 0, 4, 3, 0);
+					if (p_nodes[y][x].aeroGroup.size() > 1)
+					{
+						Force::Drag(p_nodes[y][x].base, *p_nodes[y][x].aeroGroup[0], *p_nodes[y][x].aeroGroup[1], vec3(0, 0, 5), 1.225, 1.15f);
+					}
 				}
 			}
 			for (Particle* neighbor : p_nodes[y][x].neighbors)

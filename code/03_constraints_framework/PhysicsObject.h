@@ -133,4 +133,5 @@ struct node_Particle
 {
 	Particle base;
 	std::vector<Particle*> neighbors;
+	std::vector<Particle*> aeroGroup;
 };
