@@ -203,16 +203,16 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 			{
 				if (x < prt_len - 1 && y < prt_len - 1)
 				{
-					//p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x + 1].base);
-					//p_nodes[y + 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
+					p_nodes[y][x].neighbors.push_back(&p_nodes[y + 1][x + 1].base);
+					p_nodes[y + 1][x + 1].neighbors.push_back(&p_nodes[y][x].base);
 				}
 				p_nodes[y][x].neighbors.push_back(&p_nodes[y][x + 1].base);
 				p_nodes[y][x + 1].neighbors.push_back(&p_nodes[y][x].base);
 			}
 			if (x > 0 && y < prt_len - 1)
 			{
-				//p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x - 1].base);
-				//p_nodes[y + 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
+				p_nodes[y][x].neighbors.push_back(&p_nodes[y + 1][x - 1].base);
+				p_nodes[y + 1][x - 1].neighbors.push_back(&p_nodes[y][x].base);
 			}
 			if (y < prt_len - 1)
 			{
