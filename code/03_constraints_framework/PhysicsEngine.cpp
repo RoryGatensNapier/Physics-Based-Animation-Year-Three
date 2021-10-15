@@ -201,37 +201,23 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 		{
 			if (x < prt_len - 1)
 			{
+				if (x < prt_len - 1 && y < prt_len - 1)
+				{
+					p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x + 1].base);
+					p_nodes[y + 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
+				}
 				p_nodes[y][x].neighbors.push_back(p_nodes[y][x + 1].base);
 				p_nodes[y][x + 1].neighbors.push_back(p_nodes[y][x].base);
+			}
+			if (x > 0 && y < prt_len - 1)
+			{
+				p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x - 1].base);
+				p_nodes[y + 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
 			}
 			if (y < prt_len - 1)
 			{
 				p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x].base);
 				p_nodes[y + 1][x].neighbors.push_back(p_nodes[y][x].base);
-			}
-			if (x < prt_len - 1 && y < prt_len - 1)
-			{
-				p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x + 1].base);
-				p_nodes[y + 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
-			}
-			if (x < prt_len - 1 && y > 1)
-			{
-				p_nodes[y][x].neighbors.push_back(p_nodes[y - 1][x + 1].base);
-				p_nodes[y - 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
-			}
-			if (x > 1 && y < prt_len - 1)
-			{
-				//p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x - 1].base);
-				//p_nodes[y + 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
-			}
-			if (x > 1 && y > 1)
-			{
-				p_nodes[y][x].neighbors.push_back(p_nodes[y - 1][x - 1].base);
-				p_nodes[y - 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
-			}
-			if (x == 5 && y == 5)
-			{
-				continue;
 			}
 		}
 	}
@@ -258,7 +244,7 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 			}
 			for (Particle neighbor : p_nodes[y][x].neighbors)
 			{
-				Force::Hooke(p_nodes[y][x].base, neighbor, sqrt(16.f), 30.f, 0.5f);
+				Force::Hooke(p_nodes[y][x].base, neighbor, sqrt(2.f), 30.f, 0.9f);
 			}
 		}
 	}
