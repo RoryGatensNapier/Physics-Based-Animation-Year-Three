@@ -254,7 +254,7 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 			}
 			for (Particle* neighbor : p_nodes[y][x].neighbors)
 			{
-				Force::Hooke(p_nodes[y][x].base, *neighbor, sqrt(2.f), 75.f, 0.98f);
+				Force::Hooke(p_nodes[y][x].base, *neighbor, sqrt(2.f), 175.f, 0.98f);
 			}
 		}
 	}
