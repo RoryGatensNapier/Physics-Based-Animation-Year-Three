@@ -219,15 +219,24 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 				p_nodes[y][x].neighbors.push_back(p_nodes[y - 1][x + 1].base);
 				p_nodes[y - 1][x + 1].neighbors.push_back(p_nodes[y][x].base);
 			}
+			if (x > 1 && y < prt_len - 1)
+			{
+				//p_nodes[y][x].neighbors.push_back(p_nodes[y + 1][x - 1].base);
+				//p_nodes[y + 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
+			}
 			if (x > 1 && y > 1)
 			{
 				p_nodes[y][x].neighbors.push_back(p_nodes[y - 1][x - 1].base);
 				p_nodes[y - 1][x - 1].neighbors.push_back(p_nodes[y][x].base);
 			}
+			if (x == 5 && y == 5)
+			{
+				continue;
+			}
 		}
 	}
 	p_nodes[LEN - 1][0].base.SetFixed();
-	p_nodes[LEN - 1][LEN - 1].base.SetFixed();
+	//p_nodes[LEN - 1][LEN - 1].base.SetFixed();
 }
 
 void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
@@ -243,9 +252,13 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 	{
 		for (int x = prt_len - 1; x > -1; x--)
 		{
-			if (!pt_2d[y][x].IsFixed())
+			if (!p_nodes[y][x].base.IsFixed())
 			{
 				Force::Gravity(p_nodes[y][x].base);
+			}
+			for (Particle neighbor : p_nodes[y][x].neighbors)
+			{
+				Force::Hooke(p_nodes[y][x].base, neighbor, sqrt(16.f), 30.f, 0.5f);
 			}
 		}
 	}
@@ -253,10 +266,7 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 	{
 		for (int x = prt_len - 1; x > -1; x--)
 		{
-			for (auto neighbor : p_nodes[y][x].neighbors)
-			{
-				Force::Hooke(p_nodes[y][x].base, neighbor, sqrt(2.f), 15.f, 1.f);
-			}
+			
 		}
 	}
 	for (int y = prt_len - 1; y > -1; y--)
