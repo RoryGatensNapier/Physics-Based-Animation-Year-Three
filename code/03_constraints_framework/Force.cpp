@@ -9,7 +9,7 @@ bool ConicalCalculation(vec3 particlePos, double base, double tip, double radius
 {
 	double coneHeight = base + tip;
 	double coneRatio = coneHeight / radius;
-	if (particlePos.y >= particlePos.x * coneRatio && particlePos.y >= particlePos.z * coneRatio && particlePos.y < coneHeight && particlePos.y > 0)
+	if (particlePos.z >= particlePos.x * coneRatio && particlePos.z >= particlePos.y * coneRatio && particlePos.z < coneHeight && particlePos.z > base)
 	{
 		return true;
 	}
@@ -19,12 +19,12 @@ bool ConicalCalculation(vec3 particlePos, double base, double tip, double radius
 	}
 }
 
-vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_y_tip, float cone_r_base, float max_force = 100)
+void Force::BlowDryer(Particle& particle, float cone_z_base, float cone_z_tip, float cone_r_base, float max_force = 100)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate blow dryer force
-	vec3 force = { 0,0,5 };
-	float posArr[3] = { particlePosition.x, particlePosition.y, particlePosition.z };
+	vec3 force = { 0,0,-25 };
+	float posArr[3] = { particle.Position().x, particle.Position().y, particle.Position().z };
 	float linearMultiplier[sizeof(posArr)] = { 0 };
 	for (int x = 0; x < sizeof(posArr); x++)
 	{
@@ -49,14 +49,14 @@ vec3 BlowDryerForce(const vec3& particlePosition, float cone_y_base, float cone_
 			linearMultiplier[x] = 1 / posArr[x];
 		}
 	}
-	if (ConicalCalculation(particlePosition, cone_y_base, cone_y_tip, cone_r_base))
+	if (ConicalCalculation(particle.Position(), cone_z_base, cone_z_tip, cone_r_base))
 	{
 		force = vec3(force.x * linearMultiplier[0], force.y * linearMultiplier[1], force.z * linearMultiplier[2]);
-		return force;
+		particle.ApplyForce(force);
 	}
 	else
 	{
-		return vec3(0);
+		particle.ApplyForce(vec3(0));
 	}
 }
 

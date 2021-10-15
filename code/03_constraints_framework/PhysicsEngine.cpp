@@ -192,7 +192,7 @@ void PhysicsEngine::InitClothSim(MeshDb& meshDb, const Shader* defaultShader)
 	{
 		for (int x = 0; x < prt_len; x++)
 		{
-			p_nodes[y][x].base = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0.1 * x, 0.1 * y, 0, 1), vec3(x-5, y+2, 0), vec3(0.1), 1, vec3(0));
+			p_nodes[y][x].base = InitParticle(meshDb.Get("cube"), defaultShader, /*particle_colour[x]*/ vec4(0.1 * x, 0.1 * y, 0, 1), vec3(x-5, y+2, 2), vec3(0.1), 1, vec3(0));
 		}
 	}
 	for (int y = 0; y < prt_len; y++)
@@ -241,10 +241,7 @@ void PhysicsEngine::TaskClothSim(float deltaTime, float totalTime)
 			if (p_nodes[y][x].base.IsFixed() == false)
 			{
 				Force::Gravity(p_nodes[y][x].base);
-				if (y == 0)
-				{
-					p_nodes[y][x].base.ApplyForce(vec3(0, 0, -2));
-				}
+				Force::BlowDryer(p_nodes[y][x].base, 0, 4, 3, 0);
 			}
 			for (Particle* neighbor : p_nodes[y][x].neighbors)
 			{
