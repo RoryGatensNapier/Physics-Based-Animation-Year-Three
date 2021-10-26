@@ -106,7 +106,7 @@ void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 p
 	rbody1.SetVelocity(initVel);
 	rbody1.SetAngularVelocity(initRotVel);
 
-	// Hard values as they don't *really* matter
+	// Hard values as they don't *really* matter, not going to change
 	rbody1.SetMass(1.0f);
 }
 
