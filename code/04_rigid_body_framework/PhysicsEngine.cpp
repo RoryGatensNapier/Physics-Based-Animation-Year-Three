@@ -25,7 +25,7 @@ void SymplecticEuler(RigidBody& rb, float dt)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
-	rb.SetVelocity(rb.Velocity() + ((1 / rb.Mass()) * rb.AccumulatedForce() * dt));// +(rb.AccumulatedImpulse() * rb.Mass()));
+	rb.SetVelocity(rb.Velocity() + ((1 / rb.Mass()) * rb.AccumulatedForce() * dt) + (rb.AccumulatedImpulse() / rb.Mass()));
 	rb.SetPosition(rb.Position() + (rb.Velocity() * dt));
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
@@ -54,18 +54,19 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 		{
 			auto delta = y_level - ws_coord.y;
 			rb.SetPosition(vec3(rb.Position().x, rb.Position().y + delta, rb.Position().z));
+			vec3 impulse = vec3(0);
+			vec3 normal = vec3(0, 1, 0);
+			auto v_close = dot(rb.Velocity(), normal);
+
+			impulse = -(1 + elasticity) * rb.Mass() * v_close * normal;
+			rb.ApplyImpulse(impulse);
+			printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
 		}
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	vec3 impulse = vec3(0);
-	vec3 normal = vec3(0,1,0);
-	auto v_close = dot(rb.Velocity(), normal);
 	
-	impulse = -(1 + elasticity) * rb.Mass() * v_close * normal;
-	rb.ApplyImpulse(impulse);
-	printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
@@ -87,7 +88,12 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,1,1), vec3(0), vec3(2,0,0));
+	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,1,1), vec3(0), vec3(1,1,1));
+	
+	for (auto x : ground.GetMesh()->Data().positions.data)
+	{
+		printf("Ground Normal - %f, %f, %f\n", x.x, x.y, x.z);
+	}
 }
 
 void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
@@ -109,9 +115,9 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	// Calculate forces, then acceleration, then integrate
 	rbody1.ClearForcesImpulses();
 	Force::Gravity(rbody1);
-	SymplecticEuler(rbody1, deltaTime);
-	CollisionImpulse(rbody1, 0.9, ground.Position().y);
 	//SymplecticEuler(rbody1, deltaTime);
+	CollisionImpulse(rbody1, 1.0f , ground.Position().y);
+	SymplecticEuler(rbody1, deltaTime);
 	Integrate(rbody1, deltaTime);
 }
 
