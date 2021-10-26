@@ -60,7 +60,10 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 
 			impulse = -(1 + elasticity) * rb.Mass() * v_close * normal;
 			rb.ApplyImpulse(impulse);
-			printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
+			//printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
+			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
+			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
+
 		}
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
