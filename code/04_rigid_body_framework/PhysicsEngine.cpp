@@ -21,15 +21,12 @@ void ExplicitEuler(vec3& pos, vec3& vel, float mass, const vec3& accel, const ve
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void SymplecticEuler(RigidBody& p, float dt)
+void SymplecticEuler(RigidBody& rb, float dt)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
-	p.SetVelocity(p.Velocity() + ((1/p.Mass()) * p.AccumulatedForce() * dt) + (p.AccumulatedImpulse()));
-	p.SetPosition(p.Position() + (p.Velocity() * dt));
-	auto inertia = vec3(1);
-	auto L_rot = inertia * p.AngularVelocity();
-	auto torque = 
+	rb.SetVelocity(rb.Velocity() + ((1 / rb.Mass()) * rb.AccumulatedForce() * dt));// +(rb.AccumulatedImpulse() * rb.Mass()));
+	rb.SetPosition(rb.Position() + (rb.Velocity() * dt));
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
@@ -38,32 +35,37 @@ void Integrate(RigidBody& rb, float dt)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	auto newRot = rb.AngularVelocity() + (dt * rb.AngularVelocity());
+	auto angVelSkew = glm::matrixCross3(newRot);
+	auto R = glm::mat3(rb.Orientation());
+	R += dt * angVelSkew * R;
+	R = glm::orthonormalize(R);
+	rb.SetOrientation(glm::mat4(R));
 }
 
 
-void CollisionImpulse(RigidBody& rb, int elasticity)
+void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 {
+	for (auto x : rb.GetMesh()->Data().positions.data)
+	{
+		mat4 test = rb.ModelMatrix();
+		auto ws_coord = (rb.ModelMatrix()) * vec4(x, 1);
+		if (ws_coord.y < y_level)
+		{
+			auto delta = y_level - ws_coord.y;
+			rb.SetPosition(vec3(rb.Position().x, rb.Position().y + delta, rb.Position().z));
+		}
+	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	vec3 impulse = vec3(0);
-	vec3 normal = vec3(0);
-	float* n_edit[3] = { &normal.x, &normal.y, &normal.z };
-	const float* v_edit[3] = { &rb.Velocity().x, &rb.Velocity().y, &rb.Velocity().z };
-	for (int x = 0; x < 3; x++)
-	{
-		if (v_edit[x] > 0)
-		{
-			*n_edit[x] = -1;
-		}
-		else
-		{
-			*n_edit[x] = 1;
-		}
-	}
+	vec3 normal = vec3(0,1,0);
 	auto v_close = dot(rb.Velocity(), normal);
 	
 	impulse = -(1 + elasticity) * rb.Mass() * v_close * normal;
+	rb.ApplyImpulse(impulse);
+	printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
@@ -85,16 +87,18 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,1,1));
+	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,1,1), vec3(0), vec3(2,0,0));
 }
 
-void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale)
+void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
 {
 	// Initialise the rigid body, setting parameterised members first
 	rbody1.SetShader(rbShader);
 	rbody1.SetMesh(rbMesh);
 	rbody1.SetPosition(pos);
 	rbody1.SetScale(scale);
+	rbody1.SetVelocity(initVel);
+	rbody1.SetAngularVelocity(initRotVel);
 
 	// Hard values as they don't *really* matter
 	rbody1.SetMass(1.0f);
@@ -106,6 +110,9 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	rbody1.ClearForcesImpulses();
 	Force::Gravity(rbody1);
 	SymplecticEuler(rbody1, deltaTime);
+	CollisionImpulse(rbody1, 0.9, ground.Position().y);
+	//SymplecticEuler(rbody1, deltaTime);
+	Integrate(rbody1, deltaTime);
 }
 
 
