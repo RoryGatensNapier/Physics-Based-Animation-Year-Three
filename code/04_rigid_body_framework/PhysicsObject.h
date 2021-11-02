@@ -34,13 +34,13 @@ public:
 		return m_orientation;
 	}
 
-	const Mesh * GetMesh() const
-	{ 
-		return m_mesh; 
+	const Mesh* GetMesh() const
+	{
+		return m_mesh;
 	}
 
 	// we must initialise it with a mesh and a shader
-	void SetMesh(const Mesh * mesh)
+	void SetMesh(const Mesh* mesh)
 	{
 		m_mesh = mesh;
 	}
@@ -77,9 +77,9 @@ public:
 
 	// rotate mesh by an axis,angle pair
 	void Rotate(const float angleInRads, const glm::vec3& axis)
-	{ 
+	{
 		m_orientation = glm::rotate(m_orientation, angleInRads, axis);
-	} 
+	}
 
 	// getModel computes the model matrix any time it is required
 	const glm::mat4 ModelMatrix() const
@@ -114,15 +114,15 @@ public:
 	void SetCoefficientOfRestitution(float cor) { m_cor = cor; }
 	void SetMass(float mass) { m_mass = mass; }
 	void SetVelocity(const glm::vec3& velocity) { m_velocity = velocity; }
-	
+
 	// Call this at the beginning of a simulation step
 	void ClearForcesImpulses() { m_accumulatedForce = glm::vec3(0.0f);  m_accumulatedImpulse = glm::vec3(0.0f); }
 	// Adds to the sum of forces
 	void ApplyForce(const glm::vec3& force) { m_accumulatedForce += force; }
 	// Adds to the sum of impulses
 	void ApplyImpulse(const glm::vec3& impulse) { m_accumulatedImpulse += impulse; }
-	
-	
+
+
 	float Mass() const { return m_mass; }
 	const glm::vec3& Velocity() const { return m_velocity; }
 	const glm::vec3& AccumulatedForce() { return m_accumulatedForce; }
@@ -140,7 +140,7 @@ private:
 class RigidBody : public Particle
 {
 public:
-	
+
 	void SetAngularVelocity(const glm::vec3& angVel) { m_angularVelocity = angVel; }
 	//void SetAngularAcceleration(const glm::vec3& angAccel) { m_angularAcceleration = angAccel; }
 
@@ -175,7 +175,7 @@ private:
 	glm::vec3 m_angularVelocity = glm::vec3(0.0f);
 	glm::vec3 m_angularAcceleration = glm::vec3(0.0f);
 	glm::vec3 m_AngularMomentum = glm::vec3(0);
-	
+
 	glm::vec3 m_torque = glm::vec3(0);
 	glm::vec3 m_rotAppVec = glm::vec3(0);
 	double m_rotImpulse = 0.0;

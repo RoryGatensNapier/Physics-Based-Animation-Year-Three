@@ -66,7 +66,7 @@ double RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec
 	auto r_x_Nhat = glm::cross(rb.r(), CollisionNormal);
 	auto inertia_calc = rb.GetInverseInertia() * r_x_Nhat;
 	auto iner_x_r = glm::cross(inertia_calc, rb.r());
-	auto denominator = (1.0 /rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
+	auto denominator = (1.0 / rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
 	auto rotImpulse = numerator / denominator;
 	return rotImpulse;
 }
@@ -92,7 +92,7 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate collision impulse
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
@@ -114,14 +114,14 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,3,1), vec3(0), vec3(0,0,0));
-	
+	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(0, 0, 0));
+
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
 		printf("Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
 	}
 
-	rbody1.SetAngularVelocity(vec3(10, 0, 0));
+	//rbody1.AddTorque(vec3(0.001, 0, 0));
 }
 
 void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
