@@ -85,7 +85,7 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
 			float jr = RigidCollision(rb, elasticity, vec3(ws_coord), normal);
-			rb.SetVelocity(rb.Velocity() + (jr / rb.Mass()) * normal);
+			rb.SetVelocity(rb.Velocity() - (jr / rb.Mass()) * normal);
 			rb.SetAngularVelocity(rb.AngularVelocity() + (jr * rb.GetInverseInertia() * glm::cross(rb.Position(), normal)));
 		}
 	}
@@ -121,7 +121,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 		printf("Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
 	}
 
-	//rbody1.AddTorque(vec3(0.001, 0, 0));
+	rbody1.AddTorque(vec3(0.001, 0, 0));
 }
 
 void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
