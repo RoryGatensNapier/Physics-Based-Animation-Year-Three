@@ -35,11 +35,19 @@ void Integrate(RigidBody& rb, float dt)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Implement
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	auto newRot = rb.AngularVelocity() + (dt * rb.AngularVelocity());
+	/*auto newRot = rb.AngularVelocity() + (dt * rb.GetAngularMomentum());
 	auto angVelSkew = glm::matrixCross3(newRot);
 	auto R = glm::mat3(rb.Orientation());
 	R += dt * angVelSkew * R;
 	R = glm::orthonormalize(R);
+	rb.SetOrientation(glm::mat4(R));*/
+
+	auto momentum = rb.GetInertia() * rb.AngularVelocity() * dt;
+	momentum = momentum + rb.GetTorque() * dt;
+
+	rb.SetAngularVelocity(rb.GetInverseInertia() * momentum);
+	auto R = glm::mat3(rb.Orientation());
+	R = glm::orthonormalize(R + (glm::matrixCross3(rb.AngularVelocity()) * R));
 	rb.SetOrientation(glm::mat4(R));
 }
 
@@ -48,7 +56,6 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 {
 	for (auto x : rb.GetMesh()->Data().positions.data)
 	{
-		mat4 test = rb.ModelMatrix();
 		auto ws_coord = (rb.ModelMatrix()) * vec4(x, 1);
 		if (ws_coord.y < y_level)
 		{
@@ -63,7 +70,9 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 			//printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
 			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
-
+			///
+			auto torque = glm::cross((vec3(ws_coord) - rb.Position()), impulse);
+			rb.AddTorque(torque);
 		}
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,11 +100,11 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,1,1), vec3(0), vec3(1,1,1));
+	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,3,1), vec3(0), vec3(1,1,1));
 	
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
-		printf("Ground Normal - %f, %f, %f\n", x.x, x.y, x.z);
+		printf("Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
 	}
 }
 
@@ -106,11 +115,11 @@ void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 p
 	rbody1.SetMesh(rbMesh);
 	rbody1.SetPosition(pos);
 	rbody1.SetScale(scale);
+	rbody1.SetMass(1.0f);
 	rbody1.SetVelocity(initVel);
 	rbody1.SetAngularVelocity(initRotVel);
-
-	// Hard values as they don't *really* matter, not going to change
-	rbody1.SetMass(1.0f);
+	rbody1.SetInverseInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
+	rbody1.SetInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
 }
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
@@ -119,7 +128,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	rbody1.ClearForcesImpulses();
 	Force::Gravity(rbody1);
 	//SymplecticEuler(rbody1, deltaTime);
-	CollisionImpulse(rbody1, 1.0f , ground.Position().y);
+	CollisionImpulse(rbody1, 0.9f , ground.Position().y);
 	SymplecticEuler(rbody1, deltaTime);
 	Integrate(rbody1, deltaTime);
 }

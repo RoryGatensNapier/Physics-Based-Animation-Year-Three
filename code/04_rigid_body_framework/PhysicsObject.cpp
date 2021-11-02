@@ -21,9 +21,25 @@ void PhysicsBody::Draw(const glm::mat4& viewMatrix, const glm::mat4& projectionM
 	m_mesh->DrawVertexArray();
 }
 
-glm::mat3 RigidBody::InverseInertia()
+glm::mat3 RigidBody::InverseInertia(glm::vec3 dimensions)
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Calculate the matrix
-	return glm::mat3(1.0f);
+	glm::mat3 inertia = glm::mat3(0);
+	inertia = glm::mat3({ (1.0 / 12.0) * Mass() * (pow(dimensions.y, 2) + pow(dimensions.z, 2)), 0, 0 }, { 0, (1.0 / 12.0) * Mass() * (pow(dimensions.x, 2) + pow(dimensions.z, 2)), 0 }, { 0, 0, (1.0 / 12.0) * Mass() * (pow(dimensions.x, 2) + pow(dimensions.y, 2)) });
+	inertia = glm::inverse(inertia);
+	auto ort_Transposed = glm::transpose(Orientation());
+	auto inverse_inertia = (glm::mat3)Orientation() * inertia * (glm::mat3)ort_Transposed;
+	return inverse_inertia;
+}
+
+glm::mat3 RigidBody::Inertia(glm::vec3 dimensions)
+{
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// TODO: Calculate the matrix
+	glm::mat3 inertia = glm::mat3(0);
+	inertia = glm::mat3({ (1.0 / 12.0) * Mass() * (pow(dimensions.y, 2) + pow(dimensions.z, 2)), 0, 0 }, { 0, (1.0 / 12.0) * Mass() * (pow(dimensions.x, 2) + pow(dimensions.z, 2)), 0 }, { 0, 0, (1.0 / 12.0) * Mass() * (pow(dimensions.x, 2) + pow(dimensions.y, 2)) });
+	auto ort_Transposed = glm::transpose(Orientation());
+	auto new_inertia = (glm::mat3)Orientation() * inertia * (glm::mat3)ort_Transposed;
+	return new_inertia;
 }

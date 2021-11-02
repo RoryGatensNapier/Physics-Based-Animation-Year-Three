@@ -146,8 +146,26 @@ public:
 
 	const glm::vec3& AngularVelocity() const { return m_angularVelocity; }
 	//const glm::vec3& AngularAcceleration() const { return m_angularAcceleration; }
-	glm::mat3 InverseInertia();
+
+	glm::vec3 GetTorque() const { return m_torque; }
+	void AddTorque(glm::vec3 newTorque) { m_torque = newTorque; }
+
+	glm::mat3 GetInertia() const { return m_Inertia; }
+	void SetInertia(glm::vec3 dimensions) { m_Inertia = InverseInertia(dimensions); }
+
+	glm::mat3 GetInverseInertia() const { return m_Inv_Inertia; }
+	void SetInverseInertia(glm::vec3 dimensions) { m_Inv_Inertia = InverseInertia(dimensions); }
+
+	glm::vec3 GetAngularMomentum() const { return m_AngularMomentum; }
+	void SetAngularMomentum(glm::vec3 newMomentum) { m_AngularMomentum = newMomentum; }
 private:
+	glm::mat3 Inertia(glm::vec3 dimensions);
+	glm::mat3 InverseInertia(glm::vec3 dimensions);
+
+	glm::mat3 m_Inertia = glm::mat3(0);
+	glm::mat3 m_Inv_Inertia = glm::mat3(0);
 	glm::vec3 m_angularVelocity = glm::vec3(0.0f);
-	//glm::vec3 m_angularAcceleration = glm::vec3(0.0f);
+	glm::vec3 m_angularAcceleration = glm::vec3(0.0f);
+	glm::vec3 m_AngularMomentum = glm::vec3(0);
+	glm::vec3 m_torque = glm::vec3(0);
 };
