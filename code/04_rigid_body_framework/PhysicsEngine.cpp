@@ -42,10 +42,10 @@ void Integrate(RigidBody& rb, float dt)
 	R = glm::orthonormalize(R);
 	rb.SetOrientation(glm::mat4(R));*/
 
-	auto momentum = rb.GetInertia() * rb.AngularVelocity() * dt;
+	auto momentum = rb.GetInertia() * rb.AngularVelocity();
 	momentum = momentum + rb.GetTorque() * dt;
 
-	rb.SetAngularVelocity(rb.GetInverseInertia() * momentum);
+	rb.SetAngularVelocity(rb.GetInverseInertia() * momentum + glm::cross(rb.GetRotationalApplicationVector(), rb.GetRotationalImpulse());
 	auto R = glm::mat3(rb.Orientation());
 	R = glm::orthonormalize(R + (glm::matrixCross3(rb.AngularVelocity()) * R));
 	rb.SetOrientation(glm::mat4(R));
@@ -70,9 +70,9 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 			//printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
 			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
-			///
-			auto torque = glm::cross((vec3(ws_coord) - rb.Position()), impulse);
-			rb.AddTorque(torque);
+			rb.SetRotationalApplicationVector(vec3(ws_coord) - rb.Position());
+			auto j_floor = impulse / (1.0 / rb.Mass()) + glm::dot(normal, glm::cross(rb.GetInverseInertia() * glm::cross(vec3(ws_coord) - rb.Position(), normal), normal));
+			rb.ApplyRotationalImpulse(j_floor);
 		}
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,7 +100,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,3,1), vec3(0), vec3(1,1,1));
+	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0,10,0), vec3(1,3,1), vec3(0), vec3(0,0,0));
 	
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
