@@ -85,8 +85,8 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
 			float jr = RigidCollision(rb, elasticity, vec3(ws_coord), normal);
-			rb.SetVelocity(rb.Velocity() - (jr / rb.Mass()) * normal);
-			rb.SetAngularVelocity(rb.AngularVelocity() - (jr * rb.GetInverseInertia() * glm::cross(rb.Position(), normal)));
+			rb.SetVelocity(rb.Velocity() + (jr / rb.Mass()) * normal);
+			rb.SetAngularVelocity(rb.AngularVelocity() + (jr * rb.GetInverseInertia() * glm::cross(rb.Position(), normal)));
 		}
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
