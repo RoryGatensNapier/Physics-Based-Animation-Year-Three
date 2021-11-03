@@ -162,8 +162,7 @@ public:
 	const glm::vec3& r() const { return m_rotAppVec; }
 	void Set_r(glm::vec3& newRotAppVec) { m_rotAppVec = newRotAppVec; }
 
-	double GetRotationalImpulse() const { return m_rotImpulse; }
-	void ApplyRotationalImpulse(double& newRotImpulse) { m_rotImpulse = newRotImpulse; }
+	void ClearRotationalForces() { m_torque = glm::vec3(0); }
 
 private:
 	glm::mat3 Inertia(glm::vec3 dimensions);
@@ -178,5 +177,4 @@ private:
 
 	glm::vec3 m_torque = glm::vec3(0);
 	glm::vec3 m_rotAppVec = glm::vec3(0);
-	double m_rotImpulse = 0.0;
 };
