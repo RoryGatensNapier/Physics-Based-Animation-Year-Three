@@ -177,12 +177,13 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {
 	// Calculate forces, then acceleration, then integrate
 	rbody1.ClearForcesImpulses();
+	rbody1.ClearRotationalForces();
 	Force::Gravity(rbody1);
 	//SymplecticEuler(rbody1, deltaTime);
 	//SymplecticEuler(rbody1, deltaTime);
 	//Integrate(rbody1, deltaTime);
 	TOTAL_Integration(rbody1, deltaTime);
-	CollisionImpulse(rbody1, 1.0f, ground.Position().y);
+	CollisionImpulse(rbody1, 0.9f, ground.Position().y);
 }
 
 
