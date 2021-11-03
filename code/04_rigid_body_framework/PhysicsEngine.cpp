@@ -41,8 +41,8 @@ void Integrate(RigidBody& rb, float dt)
 	R += dt * angVelSkew * R;
 	R = glm::orthonormalize(R);
 	rb.SetOrientation(glm::mat4(R));*/
-
-	auto momentum = rb.GetInertia() * rb.AngularVelocity();
+	auto pre_inertia = mat3(rb.Orientation()) * rb.GetInertia() * glm::transpose(mat3(rb.Orientation()));
+	auto momentum = pre_inertia * rb.AngularVelocity();
 	auto inertia_inverse = mat3(rb.Orientation()) * rb.GetInverseInertia() * glm::transpose(mat3(rb.Orientation()));
 
 	/*momentum = momentum + rb.GetTorque() * dt;
@@ -55,7 +55,7 @@ void Integrate(RigidBody& rb, float dt)
 	rb.SetAngularVelocity(inertia_inverse * rb.AngularMomentum());
 	auto R = glm::mat3(rb.Orientation());
 	auto test = R + (glm::matrixCross3(rb.AngularVelocity()) * R);
-	R = glm::orthonormalize(R + (glm::matrixCross3(rb.AngularVelocity()) * R));
+	R = glm::orthonormalize(R + (glm::matrixCross3(rb.AngularVelocity()) * dt * R));
 	rb.SetOrientation(R);
 }
 
@@ -93,10 +93,10 @@ void CollisionImpulse(RigidBody& rb, int elasticity, int y_level)
 			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
 			float jr = RigidCollision(rb, elasticity, vec3(ws_coord), normal);
-			rb.SetVelocity(rb.Velocity() - (jr / rb.Mass()) * normal);
+			rb.SetVelocity(rb.Velocity() + (jr / rb.Mass()) * normal);
 			auto inertia_inverse = mat3(rb.Orientation()) * rb.GetInverseInertia() * glm::transpose(mat3(rb.Orientation()));
-			auto test = (rb.AngularVelocity() + (jr * (inertia_inverse * glm::cross(rb.Position(), normal))));
-			rb.SetAngularVelocity(rb.AngularVelocity() - (jr * (inertia_inverse * glm::cross(rb.Position(), normal))));
+			auto test = (rb.AngularVelocity() - (jr * (inertia_inverse * glm::cross(rb.Position(), normal))));
+			rb.SetAngularVelocity(rb.AngularVelocity() + (jr * (inertia_inverse * glm::cross(rb.Position(), normal))));
 		}
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,7 +124,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(0.01, 0, 0));
+	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(1, 0, 0));
 
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
