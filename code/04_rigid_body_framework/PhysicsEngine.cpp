@@ -47,7 +47,8 @@ void TOTAL_Integration(RigidBody& rb, float dt)
 	auto pre_momentum = rb.GetInertia() * rb.AngularVelocity();
 	rb.SetAngularMomentum(pre_momentum);
 	auto momentum = rb.AngularMomentum() + rb.GetTorque() * dt;
-	auto angular_velocity = rb.GetInverseInertia() * momentum * dt;
+	auto angular_velocity = rb.GetInverseInertia() * momentum;
+	rb.SetAngularVelocity(angular_velocity);
 	auto angVelSkew = glm::matrixCross3(angular_velocity);
 	auto rotation = glm::orthonormalize(R + (angVelSkew * R));
 
@@ -156,7 +157,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(1, 0, 0));
+	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(0.05, 0, 0));
 
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
