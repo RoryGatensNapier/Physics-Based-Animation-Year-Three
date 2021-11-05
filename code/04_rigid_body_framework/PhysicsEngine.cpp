@@ -107,11 +107,35 @@ double RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec
 	return rotImpulse;
 }
 
-void Friction(RigidBody rb, float dt, float jr_impulse, vec3 rel_vel, float friction_val, vec3 normal)
+vec3 Friction(RigidBody rb, float jr_impulse, vec3 rel_vel, float friction_val, vec3 normal, vec3 ext_forces)
 {
-	auto vt = rel_vel - (glm::dot(rel_vel, normal) * normal);
-	auto unit_vec = vt / (float)sqrt(pow(vt.x, 2.0) + pow(vt.y, 2.0) + pow(vt.z, 2.0));
-	auto jt = -friction_val * jr_impulse * unit_vec;
+	vec3 jt = vec3(0);
+	vec3 tangent = vec3(0);
+	if (glm::dot(rel_vel, normal) == 0)
+	{
+		if (glm::dot(ext_forces, normal) == 0)
+		{
+			return;
+		}
+		auto tangent = ext_forces - (glm::dot(ext_forces, normal) * normal);
+	}
+	else
+	{
+		auto tangent = rel_vel - (glm::dot(rel_vel, normal) * normal);
+	}
+	auto unit_vec = tangent / (float)sqrt(pow(tangent.x, 2.0) + pow(tangent.y, 2.0) + pow(tangent.z, 2.0));
+	jt = -friction_val * jr_impulse * unit_vec;
+	auto test_statement = dot(rel_vel, tangent);
+	vec3 jf = vec3(0);
+	if (test_statement == 0 && rb.Mass() * test_statement < friction_val)
+	{
+		jf = -(rb.Mass() * dot(rel_vel, tangent)) * tangent;
+	}
+	else
+	{
+		jf = -(friction_val * jr_impulse) * tangent;
+	}
+	return jf;
 }
 
 void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
@@ -124,6 +148,7 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 			auto delta = y_level - ws_coord.y;
 			rb.SetPosition(vec3(rb.Position().x, rb.Position().y + delta, rb.Position().z));
 			vec3 normal = vec3(0, 1, 0);
+			auto nHat = normal / (float)sqrt(pow(normal.x, 2) + pow(normal.y, 2) + pow(normal.z, 2));
 			/*auto v_close = dot(rb.Velocity(), normal);
 
 			impulse = -(1 + elasticity) * rb.Mass() * v_close * normal;
@@ -131,11 +156,12 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 			//printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
 			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
-			float jr = RigidCollision(rb, elasticity, vec3(ws_coord), normal);
 			auto calc_vel = rb.Velocity() - glm::cross(rb.AngularVelocity(), rb.r());
-			rb.SetVelocity(calc_vel + (jr / rb.Mass()) * normal);
-			auto test = (rb.AngularVelocity() - (jr * (rb.GetInverseInertia() * glm::cross(rb.Position(), normal))));
-			rb.SetAngularVelocity(rb.AngularVelocity() + (jr * (rb.GetInverseInertia() * glm::cross(rb.Position(), normal))));
+			float jr = RigidCollision(rb, elasticity, vec3(ws_coord), nHat);
+			auto final_force = Friction(rb, jr, calc_vel, 0.25, nHat, vec3(0));
+			rb.SetVelocity(calc_vel + (jr / rb.Mass()) * nHat);
+			auto test = (rb.AngularVelocity() - (jr * (rb.GetInverseInertia() * glm::cross(rb.Position(), nHat))));
+			rb.SetAngularVelocity(rb.AngularVelocity() + (jr * (rb.GetInverseInertia() * glm::cross(rb.Position(), nHat))));
 		}
 	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
