@@ -127,7 +127,7 @@ vec3 Friction(RigidBody rb, float jr_impulse, vec3 rel_vel, float friction_val, 
 	jt = -friction_val * jr_impulse * unit_vec;
 	auto test_statement = dot(rel_vel, tangent);
 	vec3 jf = vec3(0);
-	if (test_statement == 0 && rb.Mass() * test_statement < friction_val)
+	if (test_statement == 0 && rb.Mass() * test_statement < (friction_val * jr_impulse))
 	{
 		jf = -(rb.Mass() * dot(rel_vel, tangent)) * tangent;
 	}
