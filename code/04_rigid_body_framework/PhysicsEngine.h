@@ -18,7 +18,7 @@ public:
 	void Display(const glm::mat4& viewMatrix, const glm::mat4& projMatrix);
 	void HandleInputKey(int keyCode, bool pressed);
 
-	void Task1Init(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
+	void RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
 	void Task1Update(float deltaTime, float totalTime); 
 	
 	// ... rest of the tasks here

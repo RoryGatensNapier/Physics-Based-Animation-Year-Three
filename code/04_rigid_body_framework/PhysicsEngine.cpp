@@ -115,7 +115,7 @@ vec3 Friction(RigidBody rb, float jr_impulse, vec3 rel_vel, float friction_val, 
 	{
 		if (glm::dot(ext_forces, normal) == 0)
 		{
-			return;
+			return vec3(0);
 		}
 		auto tangent = ext_forces - (glm::dot(ext_forces, normal) * normal);
 	}
@@ -154,7 +154,7 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 			impulse = -(1 + elasticity) * rb.Mass() * v_close * normal;
 			rb.ApplyImpulse(impulse);*/
 			//printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
-			printf("world coord = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
+			printf("world coord of vertex that has collided = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
 			auto calc_vel = rb.Velocity() - glm::cross(rb.AngularVelocity(), rb.r());
 			float jr = RigidCollision(rb, elasticity, vec3(ws_coord), nHat);
@@ -189,7 +189,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	Task1Init(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(0.05, 0, 0));
+	RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(0.1, 0.1, 0.1));
 
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
@@ -198,7 +198,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 }
 
-void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
+void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
 {
 	// Initialise the rigid body
 	rbody1.SetShader(rbShader);
@@ -212,6 +212,7 @@ void PhysicsEngine::Task1Init(const Shader* rbShader, const Mesh* rbMesh, vec3 p
 	rbody1.SetInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
 }
 
+
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {
 	// Calculate forces, then acceleration, then integrate
@@ -222,7 +223,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	//SymplecticEuler(rbody1, deltaTime);
 	//Integrate(rbody1, deltaTime);
 	TOTAL_Integration(rbody1, deltaTime);
-	CollisionImpulse(rbody1, 0.9f, ground.Position().y);
+	CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
 
 
