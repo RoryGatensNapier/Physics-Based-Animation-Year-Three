@@ -174,7 +174,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 {
 	// Get a few meshes/shaders from the databases
 	auto defaultShader = shaderDb.Get("default");
-	auto groundMesh = meshDb.Get("plane");
+	auto groundMesh = meshDb.Get("cube");
 
 	meshDb.Add("cube", Mesh(MeshDataFromWavefrontObj("resources/models/cube.obj")));
 	meshDb.Add("sphere", Mesh(MeshDataFromWavefrontObj("resources/models/sphere.obj")));
@@ -187,12 +187,12 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
+	//RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
 
 	for (int x = 0; x < 11; x++)
 	{
 		vec3 randomPoint = vec3(0); //TODO: initalise random point bound by dimensions of cube to initalise the balls with
-		Balls[x] = RigidBodyInit(defaultShader, meshDb.Get("sphere"), randomPoint, vec3(1), vec3(0), vec3(0));
+		Balls[x] = SpheresInit(defaultShader, meshDb.Get("sphere"), randomPoint, vec3(1), vec3(0), vec3(0));
 	}
 
 	for (auto x : ground.GetMesh()->Data().positions.data)
@@ -294,7 +294,11 @@ void PhysicsEngine::Display(const mat4& viewMatrix, const mat4& projMatrix)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TODO: Anything else to draw here
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	rbody1.Draw(viewMatrix, projMatrix);
+	//rbody1.Draw(viewMatrix, projMatrix);
+	for (auto x : Balls)
+	{
+		x.Draw(viewMatrix, projMatrix);
+	}
 }
 
 void PhysicsEngine::HandleInputKey(int keyCode, bool pressed)
