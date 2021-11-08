@@ -34,8 +34,8 @@ void SymplecticEuler(RigidBody& rb, float dt)
 
 void TOTAL_Integration(RigidBody& rb, float dt)
 {
-	auto torque = glm::cross(rb.r(), rb.AccumulatedForce());
-	rb.AddTorque(torque);
+	/*auto torque = glm::cross(rb.r(), rb.AccumulatedForce());
+	rb.AddTorque(torque);*/
 	auto velocity = rb.Velocity() + ((1.0f/rb.Mass()) * rb.AccumulatedForce() * dt);
 	auto position = rb.Position() + (velocity * dt);
 
@@ -70,7 +70,6 @@ void Integrate(RigidBody& rb, float dt)
 	R = glm::orthonormalize(R);
 	rb.SetOrientation(glm::mat4(R));*/
 	
-	auto calc_vel = rb.Velocity() + glm::cross(rb.AngularVelocity(), rb.r());
 	auto momentum = (float)(rb.Mass() * pow(glm::length(rb.r()), 2)) * rb.AngularVelocity();
 
 	/*
@@ -82,16 +81,13 @@ void Integrate(RigidBody& rb, float dt)
 	auto bfore = rb.GetInverseInertia() * rb.AngularMomentum();
 	rb.SetAngularVelocity(rb.GetInverseInertia() * rb.AngularMomentum());
 	auto R = glm::mat3(rb.Orientation());
-	R += (glm::matrixCross3(rb.AngularVelocity()) * R) * dt;
+	R += (glm::matrixCross3(rb.AngularVelocity()) * R);
 	R = glm::orthonormalize(R);
 	rb.SetOrientation(R);
 }
 
 double RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
 {
-	/*rb.SetRotationalApplicationVector(vec3(ws_coord) - rb.Position());
-	auto j_floor = impulse / (1.0 / rb.Mass()) + glm::dot(normal, glm::cross(rb.GetInverseInertia() * glm::cross(rb.GetRotationalApplicationVector(), normal), rb.GetRotationalApplicationVector()));
-	rb.ApplyRotationalImpulse(j_floor);*/
 	rb.Set_r(CollisionCoords - rb.Position());
 	auto numerator = -(1.0 + elasticity) * glm::dot(rb.Velocity() + glm::cross(rb.AngularVelocity(), rb.r()), CollisionNormal);
 	auto r_x_Nhat = glm::cross(rb.r(), CollisionNormal);
@@ -117,13 +113,15 @@ vec3 Friction(RigidBody rb, float jr_impulse, vec3 rel_vel, float friction_val, 
 		{
 			return vec3(0);
 		}
-		auto tangent = ext_forces - (glm::dot(ext_forces, normal) * normal);
+		tangent = ext_forces - (glm::dot(ext_forces, normal) * normal);
 	}
 	else
 	{
-		auto tangent = rel_vel - (glm::dot(rel_vel, normal) * normal);
+		auto stage_1 = glm::dot(rel_vel, normal);
+		auto stage_2 = (glm::dot(rel_vel, normal) * normal);
+		tangent = rel_vel - (glm::dot(rel_vel, normal) * normal);
 	}
-	auto unit_vec = tangent / (float)sqrt(pow(tangent.x, 2.0) + pow(tangent.y, 2.0) + pow(tangent.z, 2.0));
+	auto unit_vec = normalize(tangent);
 	jt = -friction_val * jr_impulse * unit_vec;
 	auto test_statement = dot(rel_vel, tangent);
 	vec3 jf = vec3(0);
@@ -148,7 +146,7 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 			auto delta = y_level - ws_coord.y;
 			rb.SetPosition(vec3(rb.Position().x, rb.Position().y + delta, rb.Position().z));
 			vec3 normal = vec3(0, 1, 0);
-			auto nHat = normal / (float)sqrt(pow(normal.x, 2) + pow(normal.y, 2) + pow(normal.z, 2));
+			auto nHat = normalize(normal);
 			/*auto v_close = dot(rb.Velocity(), normal);
 
 			impulse = -(1 + elasticity) * rb.Mass() * v_close * normal;
@@ -189,7 +187,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
-	RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 10, 0), vec3(1, 3, 1), vec3(0), vec3(0.1, 0.1, 0.1));
+	RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
 
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{

@@ -6,7 +6,7 @@ using namespace glm;
 
 void Force::Gravity(Particle& p)
 {
-	auto force = vec3(0, -9.81, 0) * p.Mass();
+	auto force = vec3(0, -9.81, 0);
 	p.ApplyForce(force);
 }
 
