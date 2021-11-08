@@ -189,6 +189,12 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	camera = Camera(vec3(0, 5, 10));
 	RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
 
+	for (int x = 0; x < 11; x++)
+	{
+		vec3 randomPoint = vec3(0); //TODO: initalise random point bound by dimensions of cube to initalise the balls with
+		Balls[x] = RigidBodyInit(defaultShader, meshDb.Get("sphere"), randomPoint, vec3(1), vec3(0), vec3(0));
+	}
+
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
 		printf("Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
@@ -210,6 +216,21 @@ void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, ve
 	rbody1.SetInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
 }
 
+RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
+{
+	// Initialise the rigid body
+	RigidBody sphere;
+	sphere.SetShader(rbShader);
+	sphere.SetMesh(rbMesh);
+	sphere.SetPosition(pos);
+	sphere.SetScale(scale);
+	sphere.SetMass(2.0f);
+	sphere.SetVelocity(initVel);
+	sphere.SetAngularVelocity(initRotVel);
+	sphere.SetInverseInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
+	sphere.SetInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
+	return sphere;
+}
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {

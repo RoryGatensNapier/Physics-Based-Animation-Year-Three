@@ -19,6 +19,7 @@ public:
 	void HandleInputKey(int keyCode, bool pressed);
 
 	void RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
+	RigidBody SpheresInit(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
 	void Task1Update(float deltaTime, float totalTime); 
 	
 	// ... rest of the tasks here
@@ -29,6 +30,8 @@ private:
 
 
 	RigidBody rbody1;
+
+	std::vector<RigidBody> Balls;
 
 	bool toggleSim = false;
 	int simMode = 1;
