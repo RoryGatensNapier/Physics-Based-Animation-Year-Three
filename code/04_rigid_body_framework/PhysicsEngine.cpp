@@ -169,37 +169,45 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
+void Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
+{
+	for (auto x : rb1.GetMesh()->Data().positions.data)
+	{
+		auto ws_coord = (rb1.ModelMatrix()) * vec4(x, 1);
+		//if () TODO: finish
+	}
+}
+
 // This is called once
 void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 {
 	// Get a few meshes/shaders from the databases
 	auto defaultShader = shaderDb.Get("default");
-	auto groundMesh = meshDb.Get("cube");
 
 	meshDb.Add("cube", Mesh(MeshDataFromWavefrontObj("resources/models/cube.obj")));
 	meshDb.Add("sphere", Mesh(MeshDataFromWavefrontObj("resources/models/sphere.obj")));
 	meshDb.Add("cone", Mesh(MeshDataFromWavefrontObj("resources/models/cone.obj")));
 
 	// Initialise ground
+	auto groundMesh = meshDb.Get("cube");
+
 	ground.SetMesh(groundMesh);
 	ground.SetShader(defaultShader);
-	ground.SetScale(vec3(10.0f));
+	ground.SetScale(vec3(10.0f, 1.0f, 10.0f));
 
-	// TODO: Get the mesh and shader for rigidy body
 	camera = Camera(vec3(0, 5, 10));
 	//RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
-
-	for (int x = 0; x < 11; x++)
+	for (int x = 0; x <= ballCount; x++)
 	{
-		vec3 randomPoint = vec3(0); //TODO: initalise random point bound by dimensions of cube to initalise the balls with
-		Balls[x] = SpheresInit(defaultShader, meshDb.Get("sphere"), randomPoint, vec3(1), vec3(0), vec3(0));
+		auto sphereMesh = meshDb.Get("sphere");
+		vec3 randomPoint = vec3(rand() % 18 - 9, 2, rand() % 18 - 9);
+		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint, vec3(1), vec3(0), vec3(0));
+		Balls.push_back(temp);
 	}
-
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
 		printf("Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
 	}
-
 }
 
 void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
