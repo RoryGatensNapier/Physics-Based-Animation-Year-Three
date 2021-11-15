@@ -173,7 +173,7 @@ void DetectCollision_Sphere(RigidBody& rb1, RigidBody& rb2)
 {
 	vec3 dist_vec = rb2.Position() - rb1.Position();
 	vec3 radii_vec = rb1.Scale() + rb2.Scale();
-	float radii = length(radii);
+	float radii = length(radii_vec);
 	if (dot(dist_vec, dist_vec) < radii)
 	{
 
