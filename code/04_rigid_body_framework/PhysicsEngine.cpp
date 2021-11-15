@@ -140,7 +140,7 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 {
 	for (auto x : rb.GetMesh()->Data().positions.data)
 	{
-		auto ws_coord = (rb.ModelMatrix()) * vec4(x, 1);
+		auto ws_coord = (rb.ModelMatrix()) * vec4(x, 1); //Conversion from relative/body space to world space for the specified point
 		if (ws_coord.y < y_level)
 		{
 			auto delta = y_level - ws_coord.y;
@@ -169,12 +169,48 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
+void DetectCollision_Sphere(RigidBody& rb1, RigidBody& rb2)
 {
-	for (auto x : rb1.GetMesh()->Data().positions.data)
+	vec3 dist_vec = rb2.Position() - rb1.Position();
+	vec3 radii_vec = rb1.Scale() + rb2.Scale();
+	float radii = length(radii);
+	if (dot(dist_vec, dist_vec) < radii)
 	{
-		auto ws_coord = (rb1.ModelMatrix()) * vec4(x, 1);
-		//if () TODO: finish
+
+	}
+}
+
+void Sphere_CollisionImpulse(RigidBody& rb, float elasticity)
+{
+	//TODO: implement collision with spheres with no rotational adjustments (for the time being)
+}
+
+void PhysicsEngine::Pooling()
+{
+	for (auto x : Balls)
+	{
+		if (x.Position().x < ground.Position().x)
+		{
+			if (x.Position().z < ground.Position().z)
+			{
+				x.SetChunk(1);
+			}
+			else
+			{
+				x.SetChunk(4);
+			}
+		}
+		else
+		{
+			if (x.Position().z < ground.Position().z)
+			{
+				x.SetChunk(2);
+			}
+			else
+			{
+				x.SetChunk(3);
+			}
+		}
 	}
 }
 
@@ -250,7 +286,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	//SymplecticEuler(rbody1, deltaTime);
 	//Integrate(rbody1, deltaTime);
 	TOTAL_Integration(rbody1, deltaTime);
-	CollisionImpulse(rbody1, 0.7f, ground.Position().y);
+	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
 
 

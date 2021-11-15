@@ -164,6 +164,9 @@ public:
 
 	void ClearRotationalForces() { m_torque = glm::vec3(0); }
 
+	void SetChunk(int chunk_id) { _chunk = chunk_id; }
+	void UnsetChunk() { _chunk = -1; }
+
 private:
 	glm::mat3 Inertia(glm::vec3 dimensions);
 	glm::mat3 InverseInertia(glm::vec3 dimensions);
@@ -177,4 +180,6 @@ private:
 
 	glm::vec3 m_torque = glm::vec3(0);
 	glm::vec3 m_rotAppVec = glm::vec3(0);
+
+	int _chunk;
 };

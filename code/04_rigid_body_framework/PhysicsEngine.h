@@ -20,7 +20,8 @@ public:
 
 	void RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
 	RigidBody SpheresInit(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
-	void Task1Update(float deltaTime, float totalTime); 
+	void Task1Update(float deltaTime, float totalTime);
+	void Pooling();
 	
 	// ... rest of the tasks here
 
