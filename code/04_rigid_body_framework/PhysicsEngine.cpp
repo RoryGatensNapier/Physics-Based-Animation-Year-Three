@@ -176,7 +176,8 @@ void DetectCollision_Sphere(RigidBody& rb1, RigidBody& rb2)
 	float radii = length(radii_vec);
 	if (dot(dist_vec, dist_vec) < radii)
 	{
-
+		Sphere_CollisionImpulse(rb1, 0.7f);
+		Sphere_CollisionImpulse(rb2, 0.7f);
 	}
 }
 
