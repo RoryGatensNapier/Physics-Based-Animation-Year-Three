@@ -169,13 +169,22 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
+void StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
 {
-	for (auto x : rb1.GetMesh()->Data().positions.data)
-	{
-		auto ws_coord = (rb1.ModelMatrix()) * vec4(x, 1);
-		//if () TODO: finish
-	}
+	auto rb1_normal = rb2.Position() - rb1.Position();
+	auto rb2_normal = rb1.Position() - rb2.Position();
+
+	auto rb1_hitpt = rb1.Position() + ((rb1.Mass()/rb2.Mass()) * rb2_normal);	//HACK
+	auto rb2_hitpt = rb2.Position() + ((rb2.Mass()/rb1.Mass()) * rb1_normal);	//hitpoints are absolute hacks, look at later
+
+	auto rb1_nHat = normalize(rb1_normal);
+	auto rb2_nHat = normalize(rb2_normal);
+	
+	float rb1_jr = RigidCollision(rb1, elasticity, rb1_hitpt, rb1_nHat);
+	float rb2_jr = RigidCollision(rb2, elasticity, rb2_hitpt, rb2_nHat);
+
+	rb1.SetVelocity(rb1.Velocity() + (rb1_jr / rb1.Mass()) * rb1_nHat);
+	rb2.SetVelocity(rb2.Velocity() + (rb2_jr / rb2.Mass()) * rb2_nHat);
 }
 
 // This is called once
