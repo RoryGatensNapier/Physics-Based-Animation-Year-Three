@@ -36,7 +36,7 @@ void TOTAL_Integration(RigidBody& rb, float dt)
 {
 	/*auto torque = glm::cross(rb.r(), rb.AccumulatedForce());
 	rb.AddTorque(torque);*/
-	auto velocity = rb.Velocity() + ((1.0f/rb.Mass()) * rb.AccumulatedForce() * dt);
+	auto velocity = rb.Velocity() + ((1.0f / rb.Mass()) * rb.AccumulatedForce() * dt) + rb.AccumulatedImpulse();
 	auto position = rb.Position() + (velocity * dt);
 
 	rb.SetVelocity(velocity);
@@ -169,7 +169,7 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
+std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
 {
 	auto rb1_normal = rb2.Position() - rb1.Position();
 	auto rb2_normal = rb1.Position() - rb2.Position();
@@ -183,8 +183,9 @@ void StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
 	float rb1_jr = RigidCollision(rb1, elasticity, rb1_hitpt, rb1_nHat);
 	float rb2_jr = RigidCollision(rb2, elasticity, rb2_hitpt, rb2_nHat);
 
-	rb1.SetVelocity(rb1.Velocity() + (rb1_jr / rb1.Mass()) * rb1_nHat);
-	rb2.SetVelocity(rb2.Velocity() + (rb2_jr / rb2.Mass()) * rb2_nHat);
+	auto rb1_retval = (rb1.Velocity() + (rb1_jr / rb1.Mass()) * rb1_nHat);
+	auto rb2_retval = (rb2.Velocity() + (rb2_jr / rb2.Mass()) * rb2_nHat);
+	return std::tuple<vec3, vec3>(rb1_retval, rb2_retval);
 }
 
 void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
