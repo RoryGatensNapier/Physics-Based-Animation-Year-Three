@@ -103,7 +103,7 @@ double RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec
 	return rotImpulse;
 }
 
-vec3 Friction(RigidBody rb, float jr_impulse, vec3 rel_vel, float friction_val, vec3 normal, vec3 ext_forces)
+vec3 Friction(RigidBody& rb, float jr_impulse, vec3 rel_vel, float friction_val, vec3 normal, vec3 ext_forces)
 {
 	vec3 jt = vec3(0);
 	vec3 tangent = vec3(0);
@@ -187,6 +187,16 @@ void StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
 	rb2.SetVelocity(rb2.Velocity() + (rb2_jr / rb2.Mass()) * rb2_nHat);
 }
 
+void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
+{
+	auto posVec = rb2.Position() - rb1.Position();
+	auto distance = length(posVec);
+	if (distance <= rb1.Mass() + rb2.Mass())
+	{
+		StS_Collision_noRot(rb1, rb2, 0.7f);
+	}
+}
+
 // This is called once
 void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 {
@@ -209,13 +219,15 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	for (int x = 0; x <= ballCount; x++)
 	{
 		auto sphereMesh = meshDb.Get("sphere");
-		vec3 randomPoint = vec3(rand() % 18 - 9, 2, rand() % 18 - 9);
+		vec3 randomPoint = vec3(rand() % 18 - 9, 8, rand() % 18 - 9);
 		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint, vec3(1), vec3(0), vec3(0));
 		Balls.push_back(temp);
 	}
 	for (auto x : ground.GetMesh()->Data().positions.data)
 	{
-		printf("Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
+		printf("Local Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
+		auto ws_groundpts = ground.ModelMatrix() * vec4(x.x, x.y, x.z, 1);
+		printf("World Space Ground Position - %f, %f, %f\n\n", ws_groundpts.x, ws_groundpts.y, ws_groundpts.z);
 	}
 }
 
@@ -241,7 +253,7 @@ RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh,
 	sphere.SetMesh(rbMesh);
 	sphere.SetPosition(pos);
 	sphere.SetScale(scale);
-	sphere.SetMass(2.0f);
+	sphere.SetMass(1.0f);
 	sphere.SetVelocity(initVel);
 	sphere.SetAngularVelocity(initRotVel);
 	sphere.SetInverseInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
@@ -252,14 +264,20 @@ RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh,
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {
 	// Calculate forces, then acceleration, then integrate
-	rbody1.ClearForcesImpulses();
-	rbody1.ClearRotationalForces();
-	Force::Gravity(rbody1);
+	//rbody1.ClearForcesImpulses();
+	//rbody1.ClearRotationalForces();
+	//Force::Gravity(rbody1);
 	//SymplecticEuler(rbody1, deltaTime);
 	//SymplecticEuler(rbody1, deltaTime);
 	//Integrate(rbody1, deltaTime);
-	TOTAL_Integration(rbody1, deltaTime);
-	CollisionImpulse(rbody1, 0.7f, ground.Position().y);
+	//TOTAL_Integration(rbody1, deltaTime);
+	for (int i = 0; i <= ballCount; i++)
+	{
+		Balls[i].ClearForcesImpulses();
+		Balls[i].ApplyForce(GRAVITY);
+		TOTAL_Integration(Balls[i], deltaTime);
+	}
+	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
 
 
