@@ -164,8 +164,34 @@ public:
 
 	void ClearRotationalForces() { m_torque = glm::vec3(0); }
 
-	void SetChunk(int chunk_id) { _chunk = chunk_id; }
-	void UnsetChunk() { _chunk = -1; }
+	void SetChunk(int chunk_id) { _chunks.push_back(chunk_id); }
+	void SetUniqueChunk(int chunk_id)
+	{
+		auto rem_iter = std::find(_chunks[0], _chunks[_chunks.max_size() - 1], chunk_id);
+		if (_chunks[rem_iter] != chunk_id)
+		{
+			_chunks.push_back(chunk_id);
+			return;
+		}
+		return;
+	}
+	void UnsetChunk(int chunk_id)
+	{ 
+		auto rem_iter = std::find(_chunks[0], _chunks[_chunks.max_size() - 1], chunk_id);
+		_chunks.erase(_chunks.begin() + rem_iter);
+	}
+	std::vector<int> GetAllChunks() { return _chunks; }
+	std::tuple<int, int> GetSingleChunk(int chunk_id)
+	{
+		auto rem_iter = std::find(_chunks[0], _chunks[_chunks.max_size() - 1], chunk_id);
+		if (_chunks[rem_iter] != chunk_id)
+		{
+			return std::tuple<int, int>(-1, -1);
+		}
+		return std::tuple<int, int>(rem_iter, chunk_id);
+	}
+
+	float GetRadius() { return radius; }
 
 private:
 	glm::mat3 Inertia(glm::vec3 dimensions);
@@ -181,5 +207,6 @@ private:
 	glm::vec3 m_torque = glm::vec3(0);
 	glm::vec3 m_rotAppVec = glm::vec3(0);
 
-	int _chunk;
+	std::vector<int> _chunks;
+	float radius = 1;// Mass()* Scale().x; <-- investigate later
 };

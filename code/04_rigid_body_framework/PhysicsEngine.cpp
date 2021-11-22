@@ -174,8 +174,8 @@ std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float
 	auto rb1_normal = rb2.Position() - rb1.Position();
 	auto rb2_normal = rb1.Position() - rb2.Position();
 
-	auto rb1_hitpt = rb1.Position() + ((rb1.Mass()/rb2.Mass()) * rb2_normal);	//HACK
-	auto rb2_hitpt = rb2.Position() + ((rb2.Mass()/rb1.Mass()) * rb1_normal);	//hitpoints are absolute hacks, look at later
+	auto rb1_hitpt = rb1.Position() + (rb1.GetRadius() * rb2_normal);
+	auto rb2_hitpt = rb2.Position() + (rb2.GetRadius() * rb1_normal);
 
 	auto rb1_nHat = normalize(rb1_normal);
 	auto rb2_nHat = normalize(rb2_normal);
@@ -192,9 +192,11 @@ void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
 {
 	auto posVec = rb2.Position() - rb1.Position();
 	auto distance = length(posVec);
-	if (distance <= rb1.Mass() + rb2.Mass())
+	if (distance <= rb1.GetRadius() + rb2.GetRadius())
 	{
-		StS_Collision_noRot(rb1, rb2, 0.7f);
+		std::tuple<vec3, vec3> new_impulse = StS_Collision_noRot(rb1, rb2, 0.7f);
+		rb1.ApplyImpulse(std::get<0>(new_impulse));
+		rb2.ApplyImpulse(std::get<1>(new_impulse));
 	}
 }
 
@@ -202,26 +204,30 @@ void PhysicsEngine::Pooling()
 {
 	for (auto x : Balls)
 	{
-		if (x.Position().x < ground.Position().x)
+		for (auto bd_pos : x.GetMesh()->Data().positions.data)
 		{
-			if (x.Position().z < ground.Position().z)
+			auto ws_pos = x.ModelMatrix() * vec4(bd_pos, 1);
+			if (ws_pos.x <= ground.Position().x)
 			{
-				x.SetChunk(1);
+				if (ws_pos.z <= ground.Position().z)
+				{
+					x.SetUniqueChunk(1);
+				}
+				if (ws_pos.z > ground.Position().z)
+				{
+					x.SetUniqueChunk(4);
+				}
 			}
-			else
+			if (ws_pos.x > ground.Position().x)
 			{
-				x.SetChunk(4);
-			}
-		}
-		else
-		{
-			if (x.Position().z < ground.Position().z)
-			{
-				x.SetChunk(2);
-			}
-			else
-			{
-				x.SetChunk(3);
+				if (ws_pos.z <= ground.Position().z)
+				{
+					x.SetUniqueChunk(2);
+				}
+				if (ws_pos.z > ground.Position().z)
+				{
+					x.SetUniqueChunk(3);
+				}
 			}
 		}
 	}
@@ -301,6 +307,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	//SymplecticEuler(rbody1, deltaTime);
 	//Integrate(rbody1, deltaTime);
 	//TOTAL_Integration(rbody1, deltaTime);
+	Pooling();
 	for (int i = 0; i <= ballCount; i++)
 	{
 		Balls[i].ClearForcesImpulses();
