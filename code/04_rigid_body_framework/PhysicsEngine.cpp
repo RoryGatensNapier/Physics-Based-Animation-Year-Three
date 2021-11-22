@@ -198,6 +198,35 @@ void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
 	}
 }
 
+void PhysicsEngine::Pooling()
+{
+	for (auto x : Balls)
+	{
+		if (x.Position().x < ground.Position().x)
+		{
+			if (x.Position().z < ground.Position().z)
+			{
+				x.SetChunk(1);
+			}
+			else
+			{
+				x.SetChunk(4);
+			}
+		}
+		else
+		{
+			if (x.Position().z < ground.Position().z)
+			{
+				x.SetChunk(2);
+			}
+			else
+			{
+				x.SetChunk(3);
+			}
+		}
+	}
+}
+
 // This is called once
 void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 {
