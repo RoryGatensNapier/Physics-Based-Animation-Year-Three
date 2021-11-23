@@ -167,21 +167,28 @@ public:
 	void SetChunk(int chunk_id) { _chunks.push_back(chunk_id); }
 	void SetUniqueChunk(int chunk_id)
 	{
-		auto rem_iter = std::find(_chunks[0], _chunks[_chunks.max_size() - 1], chunk_id);
-		if (_chunks[rem_iter] != chunk_id)
+		for (auto i : _chunks)
 		{
-			_chunks.push_back(chunk_id);
-			return;
+			if (i == chunk_id)
+			{
+				return;
+			}
 		}
-		return;
+		_chunks.push_back(chunk_id);
 	}
 	void UnsetChunk(int chunk_id)
 	{ 
-		auto rem_iter = std::find(_chunks[0], _chunks[_chunks.max_size() - 1], chunk_id);
-		_chunks.erase(_chunks.begin() + rem_iter);
+		for (int i = 0; i < _chunks.size()-1; i++)
+		{
+			if (_chunks[i] == chunk_id)
+			{
+				_chunks.erase(_chunks.begin() + i);
+				return;
+			}
+		}
 	}
 	std::vector<int> GetAllChunks() { return _chunks; }
-	std::tuple<int, int> GetSingleChunk(int chunk_id)
+	/*std::tuple<int, int> GetSingleChunk(int chunk_id)
 	{
 		auto rem_iter = std::find(_chunks[0], _chunks[_chunks.max_size() - 1], chunk_id);
 		if (_chunks[rem_iter] != chunk_id)
@@ -189,7 +196,7 @@ public:
 			return std::tuple<int, int>(-1, -1);
 		}
 		return std::tuple<int, int>(rem_iter, chunk_id);
-	}
+	}*/
 
 	float GetRadius() { return radius; }
 

@@ -34,7 +34,7 @@ private:
 
 	//RigidBody Balls[10];
 	std::vector<RigidBody> Balls;
-	int ballCount = 10;
+	int ballCount = 2;
 
 	bool toggleSim = false;
 	int simMode = 1;

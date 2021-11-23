@@ -52,7 +52,6 @@ void TOTAL_Integration(RigidBody& rb, float dt)
 	auto angVelSkew = glm::matrixCross3(angular_velocity);
 	auto rotation = glm::orthonormalize(R + (angVelSkew * R));
 
-	auto test = position - rb.Position();
 	rb.Translate(position - rb.Position());
 	rb.SetOrientation(rotation);
 
@@ -140,7 +139,7 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 {
 	for (auto x : rb.GetMesh()->Data().positions.data)
 	{
-		auto ws_coord = (rb.ModelMatrix()) * vec4(x, 1); //Conversion from relative/body space to world space for the specified point
+		auto ws_coord = (rb.ModelMatrix()) * vec4(x, 1);
 		if (ws_coord.y < y_level)
 		{
 			auto delta = y_level - ws_coord.y;
@@ -191,45 +190,39 @@ std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float
 void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
 {
 	auto posVec = rb2.Position() - rb1.Position();
+	auto rb1_normal = normalize(posVec);
+	auto rb2_normal = -rb1_normal;
 	auto distance = length(posVec);
-	if (distance <= rb1.GetRadius() + rb2.GetRadius())
+	if (distance < rb1.GetRadius() + rb2.GetRadius())
 	{
-		std::tuple<vec3, vec3> new_impulse = StS_Collision_noRot(rb1, rb2, 0.7f);
-		rb1.ApplyImpulse(std::get<0>(new_impulse));
-		rb2.ApplyImpulse(std::get<1>(new_impulse));
+		auto sinkMargin = 0.9f * ((rb1.GetRadius() + rb2.GetRadius()) - distance);
+		rb1.Translate(sinkMargin * rb1_normal);
+		rb2.Translate(sinkMargin * rb2_normal);
+		auto retVal = StS_Collision_noRot(rb1, rb2, 0.9f);
+		rb1.ApplyImpulse(std::get<0>(retVal));
+		rb2.ApplyImpulse(std::get<1>(retVal));
 	}
 }
 
-void PhysicsEngine::Pooling()
+void WallsCollision(RigidBody& rb, RigidBody& ground)
 {
-	for (auto x : Balls)
+	if (rb.Position().x >= ground.Position().x + ground.Scale().x || rb.Position().x <= ground.Position().x - ground.Scale().x)
 	{
-		for (auto bd_pos : x.GetMesh()->Data().positions.data)
-		{
-			auto ws_pos = x.ModelMatrix() * vec4(bd_pos, 1);
-			if (ws_pos.x <= ground.Position().x)
-			{
-				if (ws_pos.z <= ground.Position().z)
-				{
-					x.SetUniqueChunk(1);
-				}
-				if (ws_pos.z > ground.Position().z)
-				{
-					x.SetUniqueChunk(4);
-				}
-			}
-			if (ws_pos.x > ground.Position().x)
-			{
-				if (ws_pos.z <= ground.Position().z)
-				{
-					x.SetUniqueChunk(2);
-				}
-				if (ws_pos.z > ground.Position().z)
-				{
-					x.SetUniqueChunk(3);
-				}
-			}
-		}
+		auto sinkMargin = rb.Position().x >= ground.Position().x + ground.Scale().x ? rb.Position() - ground.Position().x + ground.Scale().x : rb.Position() - ground.Position().x - ground.Scale().x;
+		auto normal = rb.Position().x >= ground.Position().x + ground.Scale().x ? vec3(-1, 0, 0) : vec3(1, 0, 0);
+		rb.Translate(sinkMargin * normal);
+	}
+	if (rb.Position().y >= ground.Position().y + ground.Scale().y || rb.Position().y <= ground.Position().y - ground.Scale().y)
+	{
+		auto sinkMargin = rb.Position().y >= ground.Position().y + ground.Scale().y ? rb.Position() - ground.Position().y + ground.Scale().y : rb.Position() - ground.Position().y - ground.Scale().y;
+		auto normal = rb.Position().y >= ground.Position().y + ground.Scale().y ? vec3(0, -1, 0) : vec3(0, 1, 0);
+		rb.Translate(sinkMargin * normal);
+	}
+	if (rb.Position().z <= ground.Position().z - ground.Scale().z)
+	{
+		auto sinkMargin = rb.Position() - ground.Position().z + ground.Scale().z;
+		auto normal = vec3(0, 0, 1);
+		rb.Translate(sinkMargin * normal);
 	}
 }
 
@@ -252,11 +245,11 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	camera = Camera(vec3(0, 5, 10));
 	//RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
-	for (int x = 0; x <= ballCount; x++)
+	for (int x = 0; x <= ballCount-1; x++)
 	{
 		auto sphereMesh = meshDb.Get("sphere");
 		vec3 randomPoint = vec3(rand() % 18 - 9, 8, rand() % 18 - 9);
-		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint, vec3(1), vec3(0), vec3(0));
+		RigidBody temp = SpheresInit(defaultShader, sphereMesh, vec3(x*4, 10, 0), vec3(1), vec3(0), vec3(0));
 		Balls.push_back(temp);
 	}
 	for (auto x : ground.GetMesh()->Data().positions.data)
@@ -265,6 +258,8 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 		auto ws_groundpts = ground.ModelMatrix() * vec4(x.x, x.y, x.z, 1);
 		printf("World Space Ground Position - %f, %f, %f\n\n", ws_groundpts.x, ws_groundpts.y, ws_groundpts.z);
 	}
+	Balls[0].SetVelocity(vec3(0, 0, 0));
+	Balls[1].SetVelocity(vec3(-5, 0, 0));
 }
 
 void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
@@ -307,13 +302,18 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	//SymplecticEuler(rbody1, deltaTime);
 	//Integrate(rbody1, deltaTime);
 	//TOTAL_Integration(rbody1, deltaTime);
-	Pooling();
-	for (int i = 0; i <= ballCount; i++)
+	for (int i = 0; i <= ballCount-1; i++)
 	{
 		Balls[i].ClearForcesImpulses();
 		Balls[i].ApplyForce(GRAVITY);
 		TOTAL_Integration(Balls[i], deltaTime);
 	}
+	for (int i = 0; i < Balls.size() - 1; i++)
+	{
+		StS_ColDetection(Balls[i], Balls[i + 1]);
+		StS_ColDetection(Balls[i + 1], Balls[i]);
+	}
+	//printf("ball 0 speed = %f, %f, %f\n", Balls[0].Velocity().x, Balls[0].Velocity().y, Balls[0].Velocity().z);
 	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
 
