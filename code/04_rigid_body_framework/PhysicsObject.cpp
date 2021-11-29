@@ -43,3 +43,27 @@ glm::mat3 RigidBody::Inertia(glm::vec3 dimensions)
 	auto new_inertia = (glm::mat3)Orientation() * inertia * (glm::mat3)ort_Transposed;
 	return new_inertia;
 }
+
+glm::mat3 RigidBody::InverseInertia_Sphere(float radius)
+{
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// TODO: Calculate the matrix
+	glm::mat3 inertia = glm::mat3(0);
+	inertia = glm::mat3({ (2.0 / 5) * Mass() * (pow(radius, 2)), 0, 0 }, { 0, (2.0 / 5) * Mass() * (pow(radius, 2)), 0 }, { 0, 0, (2.0 / 5) * Mass() * (pow(radius, 2)) });
+	inertia = glm::inverse(inertia);
+	auto ort_Transposed = glm::transpose(Orientation());
+	auto inverse_inertia = (glm::mat3)Orientation() * inertia * (glm::mat3)ort_Transposed;
+	return inverse_inertia;
+}
+
+glm::mat3 RigidBody::Inertia_Sphere(float radius)
+{
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// TODO: Calculate the matrix
+	glm::mat3 inertia = glm::mat3(0);
+	inertia = glm::mat3({ (2.0 / 5) * Mass() * (pow(radius, 2)), 0, 0 }, { 0, (2.0 / 5) * Mass() * (pow(radius, 2)), 0 }, { 0, 0, (2.0 / 5) * Mass() * (pow(radius, 2)) });
+	auto ort_Transposed = glm::transpose(Orientation());
+	auto inverse_inertia = (glm::mat3)Orientation() * inertia * (glm::mat3)ort_Transposed;
+	return inverse_inertia;
+}
+

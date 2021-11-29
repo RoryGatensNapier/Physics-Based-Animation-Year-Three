@@ -156,6 +156,13 @@ public:
 	const glm::mat3& GetInverseInertia() const { return m_Inv_Inertia; }
 	void SetInverseInertia(glm::vec3& dimensions) { m_Inv_Inertia = InverseInertia(dimensions); }
 
+	const glm::mat3& GetInertia_Sphere() const { return m_Inertia; }
+	void SetInertia_Sphere(float radius) { m_Inertia = Inertia_Sphere(radius); }
+
+	const glm::mat3& GetInverseInertia_Sphere() const { return m_Inv_Inertia; }
+	void SetInverseInertia_Sphere(float radius) { m_Inv_Inertia = InverseInertia_Sphere(radius); }
+
+
 	const glm::vec3& AngularMomentum() const { return m_AngularMomentum; }
 	void SetAngularMomentum(glm::vec3& newMomentum) { m_AngularMomentum = newMomentum; }
 
@@ -203,6 +210,9 @@ public:
 private:
 	glm::mat3 Inertia(glm::vec3 dimensions);
 	glm::mat3 InverseInertia(glm::vec3 dimensions);
+
+	glm::mat3 Inertia_Sphere(float radius);
+	glm::mat3 InverseInertia_Sphere(float radius);
 
 	glm::mat3 m_Inertia = glm::mat3(0);
 	glm::mat3 m_Inv_Inertia = glm::mat3(0);

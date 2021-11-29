@@ -102,6 +102,23 @@ double RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec
 	return rotImpulse;
 }
 
+double RelativeRigidCollision(RigidBody& rb, RigidBody& rb2, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
+{
+	rb.Set_r(CollisionCoords - rb.Position());
+	auto numerator = -(1.0 + elasticity) * glm::dot((rb.Velocity() - rb2.Velocity()) + glm::cross(rb.AngularVelocity(), rb.r()), CollisionNormal);
+	auto r_x_Nhat = glm::cross(rb.r(), CollisionNormal);
+	auto inertia_calc = rb.GetInverseInertia() * r_x_Nhat;
+	auto iner_x_r = glm::cross(inertia_calc, rb.r());
+	auto denominator = (1.0 / rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
+	auto rotImpulse = numerator / denominator;
+	printf("impulse - %f\n", rotImpulse);
+	if (rotImpulse > 99)
+	{
+		printf("impulse - %f\n", rotImpulse);
+	}
+	return rotImpulse;
+}
+
 vec3 Friction(RigidBody& rb, float jr_impulse, vec3 rel_vel, float friction_val, vec3 normal, vec3 ext_forces)
 {
 	vec3 jt = vec3(0);
@@ -179,12 +196,12 @@ std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float
 	auto rb1_nHat = normalize(rb1_normal);
 	auto rb2_nHat = normalize(rb2_normal);
 	
-	float rb1_jr = RigidCollision(rb1, elasticity, rb1_hitpt, rb1_nHat);
-	float rb2_jr = RigidCollision(rb2, elasticity, rb2_hitpt, rb2_nHat);
+	float rb1_jr = RelativeRigidCollision(rb1, rb2, elasticity, rb1_hitpt, rb1_nHat);
+	float rb2_jr = RelativeRigidCollision(rb2, rb1, elasticity, rb2_hitpt, rb2_nHat);
 
 	auto rb1_retval = (rb1.Velocity() + (rb1_jr / rb1.Mass()) * rb1_nHat);
 	auto rb2_retval = (rb2.Velocity() + (rb2_jr / rb2.Mass()) * rb2_nHat);
-	return std::tuple<vec3, vec3>(rb1_retval, rb2_retval);
+ 	return std::tuple<vec3, vec3>(rb1_retval, rb2_retval);
 }
 
 void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
@@ -193,14 +210,14 @@ void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
 	auto rb1_normal = normalize(posVec);
 	auto rb2_normal = -rb1_normal;
 	auto distance = length(posVec);
-	if (distance < rb1.GetRadius() + rb2.GetRadius())
+	if (distance <= rb1.GetRadius() + rb2.GetRadius())
 	{
-		auto sinkMargin = 0.9f * ((rb1.GetRadius() + rb2.GetRadius()) - distance);
+		auto sinkMargin = ((rb1.GetRadius() + rb2.GetRadius()) - distance);
 		rb1.Translate(sinkMargin * rb1_normal);
 		rb2.Translate(sinkMargin * rb2_normal);
 		auto retVal = StS_Collision_noRot(rb1, rb2, 0.9f);
-		rb1.ApplyImpulse(std::get<0>(retVal));
-		rb2.ApplyImpulse(std::get<1>(retVal));
+		rb1.SetVelocity(std::get<0>(retVal));
+		rb2.SetVelocity(std::get<1>(retVal));
 	}
 }
 
@@ -287,33 +304,23 @@ RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh,
 	sphere.SetMass(1.0f);
 	sphere.SetVelocity(initVel);
 	sphere.SetAngularVelocity(initRotVel);
-	sphere.SetInverseInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
-	sphere.SetInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
+	sphere.SetInverseInertia_Sphere(sphere.GetRadius());
+	sphere.SetInertia_Sphere(sphere.GetRadius());
 	return sphere;
 }
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {
 	// Calculate forces, then acceleration, then integrate
-	//rbody1.ClearForcesImpulses();
-	//rbody1.ClearRotationalForces();
-	//Force::Gravity(rbody1);
-	//SymplecticEuler(rbody1, deltaTime);
-	//SymplecticEuler(rbody1, deltaTime);
-	//Integrate(rbody1, deltaTime);
-	//TOTAL_Integration(rbody1, deltaTime);
 	for (int i = 0; i <= ballCount-1; i++)
 	{
 		Balls[i].ClearForcesImpulses();
-		Balls[i].ApplyForce(GRAVITY);
+		//Balls[i].ApplyForce(GRAVITY);
 		TOTAL_Integration(Balls[i], deltaTime);
 	}
-	for (int i = 0; i < Balls.size() - 1; i++)
-	{
-		StS_ColDetection(Balls[i], Balls[i + 1]);
-		StS_ColDetection(Balls[i + 1], Balls[i]);
-	}
-	//printf("ball 0 speed = %f, %f, %f\n", Balls[0].Velocity().x, Balls[0].Velocity().y, Balls[0].Velocity().z);
+	StS_ColDetection(Balls[0], Balls[1]);
+	//StS_ColDetection(Balls[1], Balls[0]);
+	printf("ball 0 speed = %f, %f, %f\n", Balls[0].Velocity().x, Balls[0].Velocity().y, Balls[0].Velocity().z);
 	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
 
