@@ -85,7 +85,7 @@ void Integrate(RigidBody& rb, float dt)
 	rb.SetOrientation(R);
 }
 
-double RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
+double Impulse_RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
 {
 	rb.Set_r(CollisionCoords - rb.Position());
 	auto numerator = -(1.0 + elasticity) * glm::dot(rb.Velocity() + glm::cross(rb.AngularVelocity(), rb.r()), CollisionNormal);
@@ -102,7 +102,7 @@ double RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec
 	return rotImpulse;
 }
 
-double RelativeRigidCollision(RigidBody& rb, RigidBody& rb2, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
+double Impulse_RelativeRigidCollision(RigidBody& rb, RigidBody& rb2, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
 {
 	rb.Set_r(CollisionCoords - rb.Position());
 	auto numerator = -(1.0 + elasticity) * glm::dot((rb.Velocity() - rb2.Velocity()) + glm::cross(rb.AngularVelocity(), rb.r()), CollisionNormal);
@@ -170,7 +170,7 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 			//printf("impulse = %f, %f, %f\n", impulse.x, impulse.y, impulse.z);
 			printf("world coord of vertex that has collided = %f, %f, %f\n", ws_coord.x, ws_coord.y, ws_coord.z);
 			// use the above output to calculate the r vec for applying angular forces. since mesh is box, CoM is just the location, derive stuff from there
-			float jr = RigidCollision(rb, elasticity, vec3(ws_coord), nHat);
+			float jr = Impulse_RigidCollision(rb, elasticity, vec3(ws_coord), nHat);
 			auto final_force = Friction(rb, jr, rb.Velocity(), 0.6, nHat, vec3(0)); //--Eventually get friction in
 			rb.ApplyForce(final_force);
 			rb.SetVelocity(rb.Velocity() + (jr / rb.Mass()) * nHat);
@@ -196,8 +196,8 @@ std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float
 	auto rb1_nHat = normalize(rb1_normal);
 	auto rb2_nHat = normalize(rb2_normal);
 	
-	float rb1_jr = RelativeRigidCollision(rb1, rb2, elasticity, rb1_hitpt, rb1_nHat);
-	float rb2_jr = RelativeRigidCollision(rb2, rb1, elasticity, rb2_hitpt, rb2_nHat);
+	float rb1_jr = Impulse_RelativeRigidCollision(rb1, rb2, elasticity, rb1_hitpt, rb1_nHat);
+	float rb2_jr = Impulse_RelativeRigidCollision(rb2, rb1, elasticity, rb2_hitpt, rb2_nHat);
 
 	auto rb1_retval = (rb1.Velocity() + (rb1_jr / rb1.Mass()) * rb1_nHat);
 	auto rb2_retval = (rb2.Velocity() + (rb2_jr / rb2.Mass()) * rb2_nHat);
@@ -315,11 +315,10 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 	for (int i = 0; i <= ballCount-1; i++)
 	{
 		Balls[i].ClearForcesImpulses();
-		//Balls[i].ApplyForce(GRAVITY);
+		Balls[i].ApplyForce(GRAVITY);
 		TOTAL_Integration(Balls[i], deltaTime);
 	}
 	StS_ColDetection(Balls[0], Balls[1]);
-	//StS_ColDetection(Balls[1], Balls[0]);
 	printf("ball 0 speed = %f, %f, %f\n", Balls[0].Velocity().x, Balls[0].Velocity().y, Balls[0].Velocity().z);
 	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
