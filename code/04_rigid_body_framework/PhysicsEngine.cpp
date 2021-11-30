@@ -94,11 +94,7 @@ double Impulse_RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoo
 	auto iner_x_r = glm::cross(inertia_calc, rb.r());
 	auto denominator = (1.0 / rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
 	auto rotImpulse = numerator / denominator;
-	printf("impulse - %f\n", rotImpulse);
-	if (rotImpulse > 99)
-	{
-		printf("impulse - %f\n", rotImpulse);
-	}
+	
 	return rotImpulse;
 }
 
@@ -114,7 +110,7 @@ double Impulse_RelativeRigidCollision(RigidBody& rb, RigidBody& rb2, float elast
 	printf("impulse - %f\n", rotImpulse);
 	if (rotImpulse > 99)
 	{
-		printf("impulse - %f\n", rotImpulse);
+		printf("broken impulse - %f\n", rotImpulse);
 	}
 	return rotImpulse;
 }
@@ -204,7 +200,7 @@ std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float
  	return std::tuple<vec3, vec3>(rb1_retval, rb2_retval);
 }
 
-void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
+void StS_ColDetection(RigidBody& rb1, RigidBody& rb2, float elasticityVal)
 {
 	auto posVec = rb2.Position() - rb1.Position();
 	auto rb1_normal = normalize(posVec);
@@ -215,31 +211,43 @@ void StS_ColDetection(RigidBody& rb1, RigidBody& rb2)
 		auto sinkMargin = ((rb1.GetRadius() + rb2.GetRadius()) - distance);
 		rb1.Translate(sinkMargin * rb1_normal);
 		rb2.Translate(sinkMargin * rb2_normal);
-		auto retVal = StS_Collision_noRot(rb1, rb2, 0.9f);
+		auto retVal = StS_Collision_noRot(rb1, rb2, elasticityVal);
 		rb1.SetVelocity(std::get<0>(retVal));
 		rb2.SetVelocity(std::get<1>(retVal));
 	}
 }
 
-void WallsCollision(RigidBody& rb, RigidBody& ground)
+void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elasticityVal)
 {
+	float impulse = 0;
 	if (rb.Position().x >= ground.Position().x + ground.Scale().x || rb.Position().x <= ground.Position().x - ground.Scale().x)
 	{
-		auto sinkMargin = rb.Position().x >= ground.Position().x + ground.Scale().x ? rb.Position() - ground.Position().x + ground.Scale().x : rb.Position() - ground.Position().x - ground.Scale().x;
+		auto sinkMargin = rb.Position().x >= ground.Position().x + ground.Scale().x ? ground.Position().x + ground.Scale().x - rb.Position() : ground.Position() - ground.Scale().x - rb.Position();
 		auto normal = rb.Position().x >= ground.Position().x + ground.Scale().x ? vec3(-1, 0, 0) : vec3(1, 0, 0);
+		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
+		//rb.SetPosition(vec3(ground.Position().x + (ground.Scale().x * normal.x), rb.Position().y, rb.Position().z));
+		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
+		printf("impulse - %f\n", impulse);
+		rb.SetVelocity(rb.Velocity() * -elasticityVal);
 	}
-	if (rb.Position().y >= ground.Position().y + ground.Scale().y || rb.Position().y <= ground.Position().y - ground.Scale().y)
+	if (rb.Position().z >= ground.Position().z + ground.Scale().z || rb.Position().z <= ground.Position().z - ground.Scale().z)
 	{
-		auto sinkMargin = rb.Position().y >= ground.Position().y + ground.Scale().y ? rb.Position() - ground.Position().y + ground.Scale().y : rb.Position() - ground.Position().y - ground.Scale().y;
-		auto normal = rb.Position().y >= ground.Position().y + ground.Scale().y ? vec3(0, -1, 0) : vec3(0, 1, 0);
+		auto sinkMargin = rb.Position().z >= ground.Position().z + ground.Scale().z ? ground.Position().z + ground.Scale().z - rb.Position() : rb.Position() - ground.Position().z - ground.Scale().z;
+		auto normal = rb.Position().z >= ground.Position().z + ground.Scale().z ? vec3(0, 0, -1) : vec3(0, 0, 1);
+		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
+		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
+		rb.SetVelocity(rb.Velocity() + (impulse / rb.Mass()) * normal);
 	}
-	if (rb.Position().z <= ground.Position().z - ground.Scale().z)
+	if (rb.Position().y <= ground.Position().y + (2*rb.GetRadius()))
 	{
-		auto sinkMargin = rb.Position() - ground.Position().z + ground.Scale().z;
-		auto normal = vec3(0, 0, 1);
+		auto sinkMargin = ground.Position().y + 2*rb.GetRadius() - rb.Position();
+		auto normal = vec3(0, 1, 0);
+		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
+		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
+		rb.SetVelocity(rb.Velocity() + (impulse / rb.Mass()) * normal);
 	}
 }
 
@@ -260,7 +268,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	ground.SetShader(defaultShader);
 	ground.SetScale(vec3(20.f, 1.0f, 20.f));
 
-	camera = Camera(vec3(0, 5, 10));
+	camera = Camera(vec3(0, 10, 30));
 	//RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
 	for (int x = 0; x <= ballCount-1; x++)
 	{
@@ -275,7 +283,6 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 		auto ws_groundpts = ground.ModelMatrix() * vec4(x.x, x.y, x.z, 1);
 		printf("World Space Ground Position - %f, %f, %f\n\n", ws_groundpts.x, ws_groundpts.y, ws_groundpts.z);
 	}
-	Balls[0].SetVelocity(vec3(0, 0, 0));
 	Balls[1].SetVelocity(vec3(-5, 0, 0));
 }
 
@@ -317,9 +324,10 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		Balls[i].ClearForcesImpulses();
 		Balls[i].ApplyForce(GRAVITY);
 		TOTAL_Integration(Balls[i], deltaTime);
+		Walls_CollisionDetection(Balls[i], ground, wallElasticity);
 	}
-	StS_ColDetection(Balls[0], Balls[1]);
-	printf("ball 0 speed = %f, %f, %f\n", Balls[0].Velocity().x, Balls[0].Velocity().y, Balls[0].Velocity().z);
+	StS_ColDetection(Balls[0], Balls[1], ballElasticity);
+	//printf("ball 1 speed = %f, %f, %f\n", Balls[1].Velocity().x, Balls[1].Velocity().y, Balls[1].Velocity().z);
 	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
 

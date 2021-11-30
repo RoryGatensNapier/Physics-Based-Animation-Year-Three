@@ -35,6 +35,8 @@ private:
 	//RigidBody Balls[10];
 	std::vector<RigidBody> Balls;
 	int ballCount = 2;
+	float ballElasticity = 0.8f;
+	float wallElasticity = 0.4f;
 
 	bool toggleSim = false;
 	int simMode = 1;
