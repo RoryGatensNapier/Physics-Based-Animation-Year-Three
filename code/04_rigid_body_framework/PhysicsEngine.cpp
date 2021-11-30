@@ -258,7 +258,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	ground.SetMesh(groundMesh);
 	ground.SetShader(defaultShader);
-	ground.SetScale(vec3(10.0f, 1.0f, 10.0f));
+	ground.SetScale(vec3(20.f, 1.0f, 20.f));
 
 	camera = Camera(vec3(0, 5, 10));
 	//RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
