@@ -88,6 +88,8 @@ void Integrate(RigidBody& rb, float dt)
 double Impulse_RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
 {
 	rb.Set_r(CollisionCoords - rb.Position());
+	auto test1 = glm::cross(rb.AngularVelocity(), rb.r());
+	auto test2 = glm::dot(rb.Velocity() + glm::cross(rb.AngularVelocity(), rb.r()), CollisionNormal);
 	auto numerator = -(1.0 + elasticity) * glm::dot(rb.Velocity() + glm::cross(rb.AngularVelocity(), rb.r()), CollisionNormal);
 	auto r_x_Nhat = glm::cross(rb.r(), CollisionNormal);
 	auto inertia_calc = rb.GetInverseInertia() * r_x_Nhat;
@@ -95,6 +97,11 @@ double Impulse_RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoo
 	auto denominator = (1.0 / rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
 	auto rotImpulse = numerator / denominator;
 	
+	if (rotImpulse < 0)
+	{
+		printf("Break Point\n");
+	}
+
 	return rotImpulse;
 }
 
@@ -174,11 +181,6 @@ void CollisionImpulse(RigidBody& rb, float elasticity, int y_level)
 			rb.SetAngularVelocity(rb.AngularVelocity() + (jr * (rb.GetInverseInertia() * glm::cross(rb.Position(), nHat))));
 		}
 	}
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// TODO: Calculate collision impulse
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float elasticity)
@@ -223,13 +225,14 @@ void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elastici
 	if (rb.Position().x >= ground.Position().x + ground.Scale().x || rb.Position().x <= ground.Position().x - ground.Scale().x)
 	{
 		auto sinkMargin = rb.Position().x >= ground.Position().x + ground.Scale().x ? ground.Position().x + ground.Scale().x - rb.Position() : ground.Position() - ground.Scale().x - rb.Position();
-		auto normal = rb.Position().x >= ground.Position().x + ground.Scale().x ? vec3(-1, 0, 0) : vec3(1, 0, 0);
+		auto normal = rb.Position().x >= ground.Position().x + ground.Scale().x - rb.GetRadius() ? vec3(-1, 0, 0) : vec3(1, 0, 0);
 		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
 		//rb.SetPosition(vec3(ground.Position().x + (ground.Scale().x * normal.x), rb.Position().y, rb.Position().z));
-		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
-		printf("impulse - %f\n", impulse);
-		rb.SetVelocity(rb.Velocity() * -elasticityVal);
+		impulse = abs(Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal));
+		rb.SetVelocity(rb.Velocity() + ((impulse / rb.Mass()) * normal));
+		auto print = rb.Velocity();
+		printf("speed - %f %f %f\n", print.x, print.y, print.z);
 	}
 	if (rb.Position().z >= ground.Position().z + ground.Scale().z || rb.Position().z <= ground.Position().z - ground.Scale().z)
 	{
@@ -247,7 +250,7 @@ void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elastici
 		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
 		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
-		rb.SetVelocity(rb.Velocity() + (impulse / rb.Mass()) * normal);
+		rb.SetVelocity(rb.Velocity() + ((impulse / rb.Mass()) * normal));
 	}
 }
 
@@ -358,7 +361,6 @@ void PhysicsEngine::Update(float deltaTime, float totalTime)
 				Task1Update(timeStep, totalTime);
 				break;
 			case 2:
-				//TaskClothSim(timeStep, totalTime);
 				break;
 			}
 		}
