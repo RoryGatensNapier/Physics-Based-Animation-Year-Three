@@ -108,11 +108,21 @@ double Impulse_RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoo
 double Impulse_RelativeRigidCollision(RigidBody& rb, RigidBody& rb2, float elasticity, vec3 CollisionCoords, vec3 CollisionNormal)
 {
 	rb.Set_r(CollisionCoords - rb.Position());
+	rb2.Set_r(CollisionCoords - rb2.Position());
+
 	auto numerator = -(1.0 + elasticity) * glm::dot((rb.Velocity() - rb2.Velocity()) + glm::cross(rb.AngularVelocity(), rb.r()), CollisionNormal);
-	auto r_x_Nhat = glm::cross(rb.r(), CollisionNormal);
-	auto inertia_calc = rb.GetInverseInertia() * r_x_Nhat;
-	auto iner_x_r = glm::cross(inertia_calc, rb.r());
-	auto denominator = (1.0 / rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
+
+	//rb1
+	auto R1_r_x_Nhat = glm::cross(rb.r(), CollisionNormal);
+	auto R1_inertia_calc = rb.GetInverseInertia() * R1_r_x_Nhat;
+	auto R1_iner_x_r = glm::cross(R1_inertia_calc, rb.r());
+	
+	//rb2
+	auto R2_r_x_Nhat = glm::cross(rb2.r(), CollisionNormal);
+	auto R2_inertia_calc = rb2.GetInverseInertia() * R2_r_x_Nhat;
+	auto R2_iner_x_r = glm::cross(R2_inertia_calc, rb2.r());
+
+	auto denominator = (1.0 / rb.Mass()) + (1.0 / rb2.Mass()) + glm::dot(CollisionNormal, (R1_iner_x_r + R2_iner_x_r));
 	auto rotImpulse = numerator / denominator;
 	printf("impulse - %f\n", rotImpulse);
 	if (rotImpulse > 99)
@@ -232,7 +242,6 @@ void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elastici
 		impulse = abs(Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal));
 		rb.SetVelocity(rb.Velocity() + ((impulse / rb.Mass()) * normal));
 		auto print = rb.Velocity();
-		printf("speed - %f %f %f\n", print.x, print.y, print.z);
 	}
 	if (rb.Position().z >= ground.Position().z + ground.Scale().z || rb.Position().z <= ground.Position().z - ground.Scale().z)
 	{
@@ -240,7 +249,7 @@ void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elastici
 		auto normal = rb.Position().z >= ground.Position().z + ground.Scale().z ? vec3(0, 0, -1) : vec3(0, 0, 1);
 		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
-		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
+		impulse = abs(Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal));
 		rb.SetVelocity(rb.Velocity() + (impulse / rb.Mass()) * normal);
 	}
 	if (rb.Position().y <= ground.Position().y + (2*rb.GetRadius()))
@@ -249,7 +258,7 @@ void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elastici
 		auto normal = vec3(0, 1, 0);
 		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
-		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
+		impulse = abs(Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal));
 		rb.SetVelocity(rb.Velocity() + ((impulse / rb.Mass()) * normal));
 	}
 }
