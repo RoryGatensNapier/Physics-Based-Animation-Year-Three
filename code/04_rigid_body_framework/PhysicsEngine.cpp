@@ -198,12 +198,12 @@ std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float
 	auto rb1_normal = rb2.Position() - rb1.Position();
 	auto rb2_normal = rb1.Position() - rb2.Position();
 
-	auto rb1_hitpt = rb1.Position() + (rb1.GetRadius() * rb2_normal);
-	auto rb2_hitpt = rb2.Position() + (rb2.GetRadius() * rb1_normal);
-
 	auto rb1_nHat = normalize(rb1_normal);
 	auto rb2_nHat = normalize(rb2_normal);
-	
+
+	auto rb1_hitpt = rb1.Position() + (rb1.GetRadius() * rb1_nHat);
+	auto rb2_hitpt = rb2.Position() + (rb2.GetRadius() * rb1_nHat);
+
 	float rb1_jr = Impulse_RelativeRigidCollision(rb1, rb2, elasticity, rb1_hitpt, rb1_nHat);
 	float rb2_jr = Impulse_RelativeRigidCollision(rb2, rb1, elasticity, rb2_hitpt, rb2_nHat);
 
@@ -220,7 +220,7 @@ void StS_ColDetection(RigidBody& rb1, RigidBody& rb2, float elasticityVal)
 	auto distance = length(posVec);
 	if (distance <= rb1.GetRadius() + rb2.GetRadius())
 	{
-		auto sinkMargin = ((rb1.GetRadius() + rb2.GetRadius()) - distance);
+		auto sinkMargin = -((rb1.GetRadius() + rb2.GetRadius()) - distance)/2;
 		rb1.Translate(sinkMargin * rb1_normal);
 		rb2.Translate(sinkMargin * rb2_normal);
 		auto retVal = StS_Collision_noRot(rb1, rb2, elasticityVal);
@@ -295,7 +295,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 		auto ws_groundpts = ground.ModelMatrix() * vec4(x.x, x.y, x.z, 1);
 		printf("World Space Ground Position - %f, %f, %f\n\n", ws_groundpts.x, ws_groundpts.y, ws_groundpts.z);
 	}
-	Balls[1].SetVelocity(vec3(-5, 0, 0));
+	Balls[1].SetVelocity(vec3(-10, 0, 0));
 }
 
 void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
