@@ -285,8 +285,8 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	for (int x = 0; x <= ballCount-1; x++)
 	{
 		auto sphereMesh = meshDb.Get("sphere");
-		vec3 randomPoint = vec3(rand() % 18 - 9, 8, rand() % 18 - 9);
-		RigidBody temp = SpheresInit(defaultShader, sphereMesh, vec3(x*4, 10, 0), vec3(1), vec3(0), vec3(0));
+		vec3 randomPoint = vec3(rand() % 38 - 19, 8, rand() % 38 - 19);
+		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint/*vec3(x*4, 10, 0)*/, vec3(1), vec3(0), vec3(0));
 		Balls.push_back(temp);
 	}
 	for (auto x : ground.GetMesh()->Data().positions.data)
@@ -295,7 +295,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 		auto ws_groundpts = ground.ModelMatrix() * vec4(x.x, x.y, x.z, 1);
 		printf("World Space Ground Position - %f, %f, %f\n\n", ws_groundpts.x, ws_groundpts.y, ws_groundpts.z);
 	}
-	Balls[1].SetVelocity(vec3(-10, 0, 0));
+	//Balls[1].SetVelocity(vec3(-10, 0, 0));
 }
 
 void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
@@ -328,6 +328,47 @@ RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh,
 	return sphere;
 }
 
+void PhysicsEngine::Pooling()
+{
+	for (auto&& ball : Balls)
+	{
+		if (ball.Position().x >= 0)
+		{
+			if (ball.Position().z >= 0)
+			{
+				if (!ball.CheckChunk(3))
+				{
+					ball.SetUniqueChunk(3);
+				}
+			}
+			else
+			{
+				if (!ball.CheckChunk(2))
+				{
+					ball.SetUniqueChunk(2);
+				}
+			}
+		}
+		else
+		{
+			if (ball.Position().z >= 0)
+			{
+				if (!ball.CheckChunk(4))
+				{
+					ball.SetUniqueChunk(4);
+				}
+			}
+			else
+			{
+				if (!ball.CheckChunk(1))
+				{
+					ball.SetUniqueChunk(1);
+				}
+			}
+		}
+	}
+}
+
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 {
 	// Calculate forces, then acceleration, then integrate
@@ -338,6 +379,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		TOTAL_Integration(Balls[i], deltaTime);
 		Walls_CollisionDetection(Balls[i], ground, wallElasticity);
 	}
+	Pooling();
 	StS_ColDetection(Balls[0], Balls[1], ballElasticity);
 	//printf("ball 1 speed = %f, %f, %f\n", Balls[1].Velocity().x, Balls[1].Velocity().y, Balls[1].Velocity().z);
 	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);

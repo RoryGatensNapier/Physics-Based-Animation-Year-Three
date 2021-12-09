@@ -34,7 +34,7 @@ private:
 
 	//RigidBody Balls[10];
 	std::vector<RigidBody> Balls;
-	int ballCount = 2;
+	int ballCount = 20;
 	float ballElasticity = 0.8f;
 	float wallElasticity = 0.4f;
 

@@ -174,10 +174,11 @@ public:
 	void SetChunk(int chunk_id) { _chunks.push_back(chunk_id); }
 	void SetUniqueChunk(int chunk_id)
 	{
-		for (auto i : _chunks)
+		for (auto&& i : _chunks)
 		{
 			if (i == chunk_id)
 			{
+				printf("chunk already present!");
 				return;
 			}
 		}
@@ -195,15 +196,29 @@ public:
 		}
 	}
 	std::vector<int> GetAllChunks() { return _chunks; }
-	/*std::tuple<int, int> GetSingleChunk(int chunk_id)
+	bool CheckChunk(int chunk_id)
 	{
-		auto rem_iter = std::find(_chunks[0], _chunks[_chunks.max_size() - 1], chunk_id);
-		if (_chunks[rem_iter] != chunk_id)
+		if (_chunks.empty())
 		{
-			return std::tuple<int, int>(-1, -1);
+			return false;
 		}
-		return std::tuple<int, int>(rem_iter, chunk_id);
-	}*/
+		else
+		{
+			std::vector<int>::iterator it;
+			it = find(_chunks.begin(), _chunks.end(), chunk_id);
+			if (it != _chunks.end())
+			{
+				
+				//printf("success\n");
+				return true;
+			}
+			else
+			{
+				//printf("it = chunk vector end\n");
+				return false;
+			}
+		}
+	}
 
 	float GetRadius() { return radius; }
 
