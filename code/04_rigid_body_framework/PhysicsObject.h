@@ -213,12 +213,10 @@ public:
 			if (it != _chunks.end())
 			{
 				
-				//printf("success\n");
 				return true;
 			}
 			else
 			{
-				//printf("it = chunk vector end\n");
 				return false;
 			}
 		}

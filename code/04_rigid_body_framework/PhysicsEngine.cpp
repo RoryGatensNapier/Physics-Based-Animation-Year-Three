@@ -96,11 +96,6 @@ double Impulse_RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoo
 	auto iner_x_r = glm::cross(inertia_calc, rb.r());
 	auto denominator = (1.0 / rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
 	auto rotImpulse = numerator / denominator;
-	
-	/*if (rotImpulse < 0)
-	{
-		printf("Break Point\n");
-	}*/
 
 	return rotImpulse;
 }
@@ -124,11 +119,7 @@ double Impulse_RelativeRigidCollision(RigidBody& rb, RigidBody& rb2, float elast
 
 	auto denominator = (1.0 / rb.Mass()) + (1.0 / rb2.Mass()) + glm::dot(CollisionNormal, (R1_iner_x_r + R2_iner_x_r));
 	auto rotImpulse = numerator / denominator;
-	/*printf("impulse - %f\n", rotImpulse);
-	if (rotImpulse > 99)
-	{
-		printf("broken impulse - %f\n", rotImpulse);
-	}*/
+	
 	return rotImpulse;
 }
 
@@ -327,7 +318,7 @@ RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh,
 	return sphere;
 }
 
-void PhysicsEngine::Pooling()
+void PhysicsEngine::BroadPhaseChunkAssignment()
 {
 	std::vector<RigidBody*> group1, group2, group3, group4;
 	for (auto&& ball : Balls)
@@ -434,8 +425,7 @@ void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
 		TOTAL_Integration(Balls[i], deltaTime);
 		Walls_CollisionDetection(Balls[i], ground, wallElasticity);
 	}
-	Pooling();
-	StS_ColDetection(Balls[0], Balls[1], ballElasticity);
+	BroadPhaseChunkAssignment();
 	//printf("ball 1 speed = %f, %f, %f\n", Balls[1].Velocity().x, Balls[1].Velocity().y, Balls[1].Velocity().z);
 	//CollisionImpulse(rbody1, 0.7f, ground.Position().y);
 }
