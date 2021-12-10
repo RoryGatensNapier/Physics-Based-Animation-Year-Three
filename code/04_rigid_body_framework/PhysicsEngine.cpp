@@ -285,7 +285,7 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	for (int x = 0; x <= ballCount-1; x++)
 	{
 		auto sphereMesh = meshDb.Get("sphere");
-		vec3 randomPoint = vec3(rand() % 38 - 19, 8, rand() % 38 - 19);
+		vec3 randomPoint = vec3((rand() % 18 - 9)*2, rand() % 5 + 10, (rand() % 18 - 9) * 2);
 		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint/*vec3(x*4, 10, 0)*/, vec3(1), vec3(0), vec3(0));
 		Balls.push_back(temp);
 	}
@@ -328,8 +328,10 @@ RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh,
 	return sphere;
 }
 
-void PhysicsEngine::Pooling()
+std::vector<std::vector<RigidBody>*> PhysicsEngine::Pooling()
 {
+	std::vector<RigidBody> group1, group2, group3, group4;
+	std::vector<std::vector<RigidBody>*> ret_groups = { &group1, &group2, &group3, &group4 };
 	for (auto&& ball : Balls)
 	{
 		if (ball.Position().x >= 0)
@@ -339,6 +341,7 @@ void PhysicsEngine::Pooling()
 				if (!ball.CheckChunk(3))
 				{
 					ball.SetUniqueChunk(3);
+					group3.push_back(ball);
 				}
 			}
 			else
@@ -346,6 +349,7 @@ void PhysicsEngine::Pooling()
 				if (!ball.CheckChunk(2))
 				{
 					ball.SetUniqueChunk(2);
+					group2.push_back(ball);
 				}
 			}
 		}
@@ -356,6 +360,7 @@ void PhysicsEngine::Pooling()
 				if (!ball.CheckChunk(4))
 				{
 					ball.SetUniqueChunk(4);
+					group4.push_back(ball);
 				}
 			}
 			else
@@ -363,10 +368,12 @@ void PhysicsEngine::Pooling()
 				if (!ball.CheckChunk(1))
 				{
 					ball.SetUniqueChunk(1);
+					group1.push_back(ball);
 				}
 			}
 		}
 	}
+	return ret_groups;
 }
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
