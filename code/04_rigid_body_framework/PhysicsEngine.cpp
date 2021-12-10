@@ -242,9 +242,9 @@ void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elastici
 		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
 		rb.SetVelocity(rb.Velocity() + (impulse / rb.Mass()) * normal);
 	}
-	if (rb.Position().y <= ground.Position().y + (2*rb.GetRadius()))
+	if (rb.Position().y <= ground.Position().y + rb.GetRadius() +1)
 	{
-		auto sinkMargin = ground.Position().y + 2*rb.GetRadius() - rb.Position();
+		auto sinkMargin = ground.Position().y + rb.GetRadius() + 1 - rb.Position();
 		auto normal = vec3(0, 1, 0);
 		rb.Translate(sinkMargin * normal);
 		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
@@ -276,7 +276,8 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 	{
 		auto sphereMesh = meshDb.Get("sphere");
 		vec3 randomPoint = vec3((rand() % 28 - 14)*2, rand() % 15 + 5, (rand() % 28 - 14) * 2);
-		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint /*vec3((x * 8)-4, 10, -5)*/, vec3(1), randomPoint, vec3(0));
+		vec3 randomVel = vec3(rand() % 40 - 20, 0, rand() % 40 - 20);
+		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint /*vec3((x * 8)-4, 10, -5)*/, randomVel, vec3(0));
 		Balls.push_back(temp);
 	}
 	/*for (auto x : ground.GetMesh()->Data().positions.data)
@@ -302,19 +303,36 @@ void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, ve
 	rbody1.SetInertia(vec3(scale.x * 2, scale.y * 2, scale.z * 2));
 }
 
-RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
+RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 initVel, vec3 initRotVel)
 {
 	// Initialise the rigid body
 	RigidBody sphere;
 	sphere.SetShader(rbShader);
 	sphere.SetMesh(rbMesh);
 	sphere.SetPosition(pos);
-	sphere.SetScale(scale);
-	sphere.SetMass(1.0f);
 	sphere.SetVelocity(initVel);
 	sphere.SetAngularVelocity(initRotVel);
 	sphere.SetInverseInertia_Sphere(sphere.GetRadius());
 	sphere.SetInertia_Sphere(sphere.GetRadius());
+
+	auto mass = rand() % 3 + 1;
+
+	switch ((int)mass)
+	{
+	case 1:
+		sphere.SetColor(vec4(1, 0, 0, 1));
+		break;
+	case 2:
+		sphere.SetColor(vec4(0, 1, 0, 1));
+		break;
+	case 3:
+		sphere.SetColor(vec4(0, 0, 1, 1));
+		break;
+	}
+	sphere.SetMass(mass);
+	sphere.SetScale(vec3(mass));
+	sphere.SetRadius(mass);
+
 	return sphere;
 }
 

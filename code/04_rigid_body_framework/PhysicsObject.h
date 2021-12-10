@@ -222,7 +222,8 @@ public:
 		}
 	}
 
-	float GetRadius() { return radius; }
+	float GetRadius() { return _radius; }
+	void SetRadius(float radius) { _radius = radius; }
 
 private:
 	glm::mat3 Inertia(glm::vec3 dimensions);
@@ -242,5 +243,5 @@ private:
 	glm::vec3 m_rotAppVec = glm::vec3(0);
 
 	std::vector<int> _chunks;
-	float radius = 1;// Mass()* Scale().x; <-- investigate later
+	float _radius;
 };
