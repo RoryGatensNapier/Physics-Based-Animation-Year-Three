@@ -190,7 +190,11 @@ public:
 		{
 			if (_chunks[i] == chunk_id)
 			{
-				_chunks.erase(_chunks.begin() + i);
+				auto iter = find(_chunks.begin(), _chunks.end(), chunk_id);
+				if (iter != _chunks.end())
+				{
+					_chunks.erase(iter);
+				}
 				return;
 			}
 		}

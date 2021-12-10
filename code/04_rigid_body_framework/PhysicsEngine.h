@@ -21,7 +21,7 @@ public:
 	void RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
 	RigidBody SpheresInit(const Shader* rbShader, const Mesh* rbMesh, glm::vec3 pos, glm::vec3 scale, glm::vec3 initVel, glm::vec3 initRotVel);
 	void Task1Update(float deltaTime, float totalTime);
-	std::vector<std::vector<RigidBody>*> Pooling();
+	void Pooling();
 	
 	// ... rest of the tasks here
 
@@ -34,7 +34,7 @@ private:
 
 	//RigidBody Balls[10];
 	std::vector<RigidBody> Balls;
-	int ballCount = 20;
+	int ballCount = 30;
 	float ballElasticity = 0.8f;
 	float wallElasticity = 0.4f;
 

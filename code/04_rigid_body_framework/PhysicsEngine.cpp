@@ -97,10 +97,10 @@ double Impulse_RigidCollision(RigidBody& rb, float elasticity, vec3 CollisionCoo
 	auto denominator = (1.0 / rb.Mass()) + glm::dot(CollisionNormal, iner_x_r);
 	auto rotImpulse = numerator / denominator;
 	
-	if (rotImpulse < 0)
+	/*if (rotImpulse < 0)
 	{
 		printf("Break Point\n");
-	}
+	}*/
 
 	return rotImpulse;
 }
@@ -124,11 +124,11 @@ double Impulse_RelativeRigidCollision(RigidBody& rb, RigidBody& rb2, float elast
 
 	auto denominator = (1.0 / rb.Mass()) + (1.0 / rb2.Mass()) + glm::dot(CollisionNormal, (R1_iner_x_r + R2_iner_x_r));
 	auto rotImpulse = numerator / denominator;
-	printf("impulse - %f\n", rotImpulse);
+	/*printf("impulse - %f\n", rotImpulse);
 	if (rotImpulse > 99)
 	{
 		printf("broken impulse - %f\n", rotImpulse);
-	}
+	}*/
 	return rotImpulse;
 }
 
@@ -215,11 +215,11 @@ std::tuple<vec3, vec3> StS_Collision_noRot(RigidBody& rb1, RigidBody& rb2, float
 void StS_ColDetection(RigidBody& rb1, RigidBody& rb2, float elasticityVal)
 {
 	auto posVec = rb2.Position() - rb1.Position();
-	auto rb1_normal = normalize(posVec);
-	auto rb2_normal = -rb1_normal;
 	auto distance = length(posVec);
 	if (distance <= rb1.GetRadius() + rb2.GetRadius())
 	{
+		auto rb1_normal = normalize(posVec);
+		auto rb2_normal = -rb1_normal;
 		auto sinkMargin = -((rb1.GetRadius() + rb2.GetRadius()) - distance)/2;
 		rb1.Translate(sinkMargin * rb1_normal);
 		rb2.Translate(sinkMargin * rb2_normal);
@@ -234,31 +234,30 @@ void Walls_CollisionDetection(RigidBody& rb, PhysicsBody& ground, float elastici
 	float impulse = 0;
 	if (rb.Position().x >= ground.Position().x + ground.Scale().x || rb.Position().x <= ground.Position().x - ground.Scale().x)
 	{
-		auto sinkMargin = rb.Position().x >= ground.Position().x + ground.Scale().x ? ground.Position().x + ground.Scale().x - rb.Position() : ground.Position() - ground.Scale().x - rb.Position();
-		auto normal = rb.Position().x >= ground.Position().x + ground.Scale().x - rb.GetRadius() ? vec3(-1, 0, 0) : vec3(1, 0, 0);
-		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
+		auto sinkMargin = rb.Position().x + rb.GetRadius() >= ground.Position().x + ground.Scale().x ? ground.Position().x + ground.Scale().x - rb.Position() : ground.Position() - ground.Scale().x - rb.Position();
+		auto normal = vec3(1, 0, 0);
 		rb.Translate(sinkMargin * normal);
+		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		//rb.SetPosition(vec3(ground.Position().x + (ground.Scale().x * normal.x), rb.Position().y, rb.Position().z));
-		impulse = abs(Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal));
+		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
 		rb.SetVelocity(rb.Velocity() + ((impulse / rb.Mass()) * normal));
-		auto print = rb.Velocity();
 	}
 	if (rb.Position().z >= ground.Position().z + ground.Scale().z || rb.Position().z <= ground.Position().z - ground.Scale().z)
 	{
-		auto sinkMargin = rb.Position().z >= ground.Position().z + ground.Scale().z ? ground.Position().z + ground.Scale().z - rb.Position() : rb.Position() - ground.Position().z - ground.Scale().z;
-		auto normal = rb.Position().z >= ground.Position().z + ground.Scale().z ? vec3(0, 0, -1) : vec3(0, 0, 1);
-		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
+		auto sinkMargin = rb.Position().z + rb.GetRadius() >= ground.Position().z + ground.Scale().z ? ground.Position().z + ground.Scale().z - rb.Position() : ground.Position() - ground.Scale().z - rb.Position();
+		auto normal = vec3(0, 0, 1);
 		rb.Translate(sinkMargin * normal);
-		impulse = abs(Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal));
+		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
+		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
 		rb.SetVelocity(rb.Velocity() + (impulse / rb.Mass()) * normal);
 	}
 	if (rb.Position().y <= ground.Position().y + (2*rb.GetRadius()))
 	{
 		auto sinkMargin = ground.Position().y + 2*rb.GetRadius() - rb.Position();
 		auto normal = vec3(0, 1, 0);
-		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
 		rb.Translate(sinkMargin * normal);
-		impulse = abs(Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal));
+		auto hitPoint = rb.Position() + (rb.GetRadius() * normal);
+		impulse = Impulse_RigidCollision(rb, elasticityVal, hitPoint, normal);
 		rb.SetVelocity(rb.Velocity() + ((impulse / rb.Mass()) * normal));
 	}
 }
@@ -278,24 +277,24 @@ void PhysicsEngine::Init(Camera& camera, MeshDb& meshDb, ShaderDb& shaderDb)
 
 	ground.SetMesh(groundMesh);
 	ground.SetShader(defaultShader);
-	ground.SetScale(vec3(20.f, 1.0f, 20.f));
+	ground.SetScale(vec3(30.f, 1.0f, 30.f));
 
-	camera = Camera(vec3(0, 10, 30));
+	camera = Camera(vec3(0, 20, 70));
 	//RigidBodyInit(defaultShader, meshDb.Get("cube"), vec3(0, 5, 0), vec3(1, 3, 1), vec3(5, 0, 0), vec3(0, 0, 0));
 	for (int x = 0; x <= ballCount-1; x++)
 	{
 		auto sphereMesh = meshDb.Get("sphere");
-		vec3 randomPoint = vec3((rand() % 18 - 9)*2, rand() % 5 + 10, (rand() % 18 - 9) * 2);
-		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint/*vec3(x*4, 10, 0)*/, vec3(1), vec3(0), vec3(0));
+		vec3 randomPoint = vec3((rand() % 28 - 14)*2, rand() % 15 + 5, (rand() % 28 - 14) * 2);
+		RigidBody temp = SpheresInit(defaultShader, sphereMesh, randomPoint /*vec3((x * 8)-4, 10, -5)*/, vec3(1), randomPoint, vec3(0));
 		Balls.push_back(temp);
 	}
-	for (auto x : ground.GetMesh()->Data().positions.data)
+	/*for (auto x : ground.GetMesh()->Data().positions.data)
 	{
 		printf("Local Ground Positions - %f, %f, %f\n", x.x, x.y, x.z);
 		auto ws_groundpts = ground.ModelMatrix() * vec4(x.x, x.y, x.z, 1);
 		printf("World Space Ground Position - %f, %f, %f\n\n", ws_groundpts.x, ws_groundpts.y, ws_groundpts.z);
-	}
-	//Balls[1].SetVelocity(vec3(-10, 0, 0));
+	}*/
+	Balls[1].SetVelocity(vec3(-5, 0, 0));
 }
 
 void PhysicsEngine::RigidBodyInit(const Shader* rbShader, const Mesh* rbMesh, vec3 pos, vec3 scale, vec3 initVel, vec3 initRotVel)
@@ -328,52 +327,101 @@ RigidBody PhysicsEngine::SpheresInit(const Shader* rbShader, const Mesh* rbMesh,
 	return sphere;
 }
 
-std::vector<std::vector<RigidBody>*> PhysicsEngine::Pooling()
+void PhysicsEngine::Pooling()
 {
-	std::vector<RigidBody> group1, group2, group3, group4;
-	std::vector<std::vector<RigidBody>*> ret_groups = { &group1, &group2, &group3, &group4 };
+	std::vector<RigidBody*> group1, group2, group3, group4;
 	for (auto&& ball : Balls)
 	{
 		if (ball.Position().x >= 0)
 		{
 			if (ball.Position().z >= 0)
 			{
-				if (!ball.CheckChunk(3))
+				if (ball.GetAllChunks().size() == 0 || !ball.CheckChunk(3))
 				{
 					ball.SetUniqueChunk(3);
-					group3.push_back(ball);
 				}
+				if (ball.CheckChunk(4))
+				{
+					ball.UnsetChunk(4);
+				}
+				if (ball.CheckChunk(1))
+				{
+					ball.UnsetChunk(1);
+				}
+				group3.push_back(&ball);
+
 			}
 			else
 			{
-				if (!ball.CheckChunk(2))
+				if (ball.GetAllChunks().size() == 0 || !ball.CheckChunk(2))
 				{
 					ball.SetUniqueChunk(2);
-					group2.push_back(ball);
 				}
+				if (ball.CheckChunk(4))
+				{
+					ball.UnsetChunk(4);
+				}
+				if (ball.CheckChunk(1))
+				{
+					ball.UnsetChunk(1);
+				}
+				group2.push_back(&ball);
+
 			}
 		}
 		else
 		{
 			if (ball.Position().z >= 0)
 			{
-				if (!ball.CheckChunk(4))
+				if (ball.GetAllChunks().size() == 0 || !ball.CheckChunk(4))
 				{
 					ball.SetUniqueChunk(4);
-					group4.push_back(ball);
 				}
+				if (ball.CheckChunk(3))
+				{
+					ball.UnsetChunk(3);
+				}
+				if (ball.CheckChunk(2))
+				{
+					ball.UnsetChunk(2);
+				}
+				group4.push_back(&ball);
 			}
 			else
 			{
-				if (!ball.CheckChunk(1))
+				if (ball.GetAllChunks().size() == 0 || !ball.CheckChunk(1))
 				{
 					ball.SetUniqueChunk(1);
-					group1.push_back(ball);
+				}
+				if (ball.CheckChunk(3))
+				{
+					ball.UnsetChunk(3);
+				}
+				if (ball.CheckChunk(2))
+				{
+					ball.UnsetChunk(2);
+				}
+				group1.push_back(&ball);
+			}
+		}
+	}
+	std::vector<std::vector<RigidBody*>> groups = { group1, group2, group3, group4 };
+	for (auto&& chunk : groups)
+	{
+		if (!chunk.empty())
+		{
+			for (int i = 0; i < chunk.size() - 1; i++)
+			{
+				for (int y = 0; y < chunk.size()-1; y++)
+				{
+					if (y != i)
+					{
+						StS_ColDetection(*chunk[i], *chunk[y], ballElasticity);
+					}
 				}
 			}
 		}
 	}
-	return ret_groups;
 }
 
 void PhysicsEngine::Task1Update(float deltaTime, float totalTime)
